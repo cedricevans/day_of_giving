@@ -1,0 +1,57 @@
+@import 'tailwindcss';
+
+@theme {
+  /* PAD brand: deep purple + gold, from the crest */
+  --color-pad-purple-950: #1e0f33;
+  --color-pad-purple-900: #2c1454;
+  --color-pad-purple-800: #3b1f6e;
+  --color-pad-purple-700: #4b2e83;
+  --color-pad-purple-600: #5e3ba3;
+  --color-pad-gold-600: #a37f1f;
+  --color-pad-gold-500: #c9a13a;
+  --color-pad-gold-400: #d9b95e;
+  --color-pad-gold-300: #e8cd85;
+  --color-pad-cream: #faf6ec;
+
+  --font-display: 'Playfair Display', ui-serif, Georgia, serif;
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --animate-fade-up: fade-up 0.7s ease-out both;
+  --animate-shimmer: shimmer 2.5s linear infinite;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes shimmer {
+    from {
+      background-position: -200% 0;
+    }
+    to {
+      background-position: 200% 0;
+    }
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--color-pad-cream);
+  color: var(--color-pad-purple-950);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-pad-gold-400);
+  color: var(--color-pad-purple-950);
+}
