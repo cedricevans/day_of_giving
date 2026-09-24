@@ -78,7 +78,7 @@ export function LeadCapture() {
             type="button"
             onClick={() => handleContinue('donate')}
             disabled={status === 'saving'}
-            className="btn-gold flex-1 rounded-full px-8 py-4 text-lg font-extrabold transition-transform hover:scale-[1.02] active:scale-95 disabled:opacity-60"
+            className="btn-gold flex-1 whitespace-nowrap rounded-full px-4 py-4 text-base font-extrabold transition-transform hover:scale-[1.02] active:scale-95 disabled:opacity-60 sm:px-8 sm:text-lg"
           >
             Continue to Give →
           </button>
@@ -86,7 +86,7 @@ export function LeadCapture() {
             type="button"
             onClick={() => handleContinue('join')}
             disabled={status === 'saving'}
-            className="flex-1 rounded-full border-2 border-pad-purple-700/20 px-8 py-4 text-lg font-semibold text-pad-purple-900 transition-colors hover:border-pad-purple-700 disabled:opacity-60"
+            className="flex-1 whitespace-nowrap rounded-full border-2 border-pad-purple-700/20 px-4 py-4 text-base font-semibold text-pad-purple-900 transition-colors hover:border-pad-purple-700 disabled:opacity-60 sm:px-8 sm:text-lg"
           >
             Continue to Join →
           </button>

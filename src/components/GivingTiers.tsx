@@ -70,7 +70,7 @@ export function GivingTiers() {
                     {!presetAmounts.has(amount) && (
                       <p className="mt-1 text-xs text-purple-200/50">Enter as a custom amount on PAD's form</p>
                     )}
-                    <span className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-pad-gold-300 transition-transform group-hover:translate-x-1">
+                    <span className="mt-6 inline-flex items-center gap-2 whitespace-nowrap text-sm font-bold text-pad-gold-300 transition-transform group-hover:translate-x-1">
                       Give ${amount.toLocaleString()} <span aria-hidden="true">→</span>
                     </span>
                   </a>
