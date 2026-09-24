@@ -4,7 +4,9 @@ import type { Database } from './database.types'
 const url = import.meta.env.VITE_SUPABASE_URL
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-if (!url || !anonKey) {
+export const isSupabaseConfigured = Boolean(url && anonKey)
+
+if (!isSupabaseConfigured) {
   // Non-fatal: the landing page's hero/story/buttons still work without a
   // backend. Only tracking + admin login are unavailable until this is set.
   console.warn(
@@ -12,5 +14,11 @@ if (!url || !anonKey) {
   )
 }
 
-export const supabase = createClient<Database>(url ?? '', anonKey ?? '')
-export const isSupabaseConfigured = Boolean(url && anonKey)
+// createClient() throws synchronously on an empty/invalid URL, which would
+// crash the whole app (including the public landing page) at module load.
+// Fall back to a syntactically valid placeholder so the client always
+// constructs; isSupabaseConfigured is what actually gates real usage.
+export const supabase = createClient<Database>(
+  isSupabaseConfigured ? url : 'https://placeholder.supabase.co',
+  isSupabaseConfigured ? anonKey : 'placeholder-anon-key',
+)
