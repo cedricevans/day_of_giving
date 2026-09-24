@@ -2,10 +2,10 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Database } from '../lib/database.types'
 
-type Session = Database['public']['Tables']['sessions']['Row']
-type Event = Database['public']['Tables']['events']['Row']
-type Lead = Database['public']['Tables']['leads']['Row']
-type Donation = Database['public']['Tables']['donations']['Row']
+type Session = Database['pad']['Tables']['sessions']['Row']
+type Event = Database['pad']['Tables']['events']['Row']
+type Lead = Database['pad']['Tables']['leads']['Row']
+type Donation = Database['pad']['Tables']['donations']['Row']
 
 export function useAdminData() {
   const [sessions, setSessions] = useState<Session[]>([])
@@ -42,7 +42,7 @@ export function useAdminData() {
     refresh()
   }, [refresh])
 
-  async function addDonation(input: Database['public']['Tables']['donations']['Insert']) {
+  async function addDonation(input: Database['pad']['Tables']['donations']['Insert']) {
     const { error } = await supabase.from('donations').insert(input)
     if (error) throw error
     await refresh()

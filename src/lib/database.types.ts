@@ -1,6 +1,7 @@
 // Hand-written to match supabase/migrations/0001_init.sql.
-// Regenerate with `supabase gen types typescript --linked` once the
-// project is linked, and replace this file with the generated output.
+// Regenerate with `supabase gen types typescript --linked --schema pad`
+// once schema exposure is confirmed, and replace this file with the
+// generated output.
 
 export type EventType =
   | 'page_view'
@@ -12,7 +13,7 @@ export type EventType =
 export type LeadIntent = 'donate' | 'join' | 'unspecified'
 
 export interface Database {
-  public: {
+  pad: {
     Tables: {
       sessions: {
         Row: {
@@ -24,6 +25,11 @@ export interface Database {
           referrer: string | null
           landing_path: string | null
           user_agent: string | null
+          geo_country: string | null
+          geo_country_code: string | null
+          geo_region: string | null
+          geo_region_code: string | null
+          geo_city: string | null
         }
         Insert: {
           id?: string
@@ -34,6 +40,11 @@ export interface Database {
           referrer?: string | null
           landing_path?: string | null
           user_agent?: string | null
+          geo_country?: string | null
+          geo_country_code?: string | null
+          geo_region?: string | null
+          geo_region_code?: string | null
+          geo_city?: string | null
         }
         Update: {
           id?: string
@@ -44,6 +55,11 @@ export interface Database {
           referrer?: string | null
           landing_path?: string | null
           user_agent?: string | null
+          geo_country?: string | null
+          geo_country_code?: string | null
+          geo_region?: string | null
+          geo_region_code?: string | null
+          geo_city?: string | null
         }
         Relationships: []
       }

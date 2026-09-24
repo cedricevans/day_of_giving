@@ -23,7 +23,7 @@ function KpiCard({ label, value, sub }: { label: string; value: string; sub?: st
 export function AdminDashboard() {
   const { signOut } = useAuth()
   const { sessions, events, leads, donations, loading, error, addDonation } = useAdminData()
-  const [tab, setTab] = useState<'overview' | 'leads' | 'donations'>('overview')
+  const [tab, setTab] = useState<'overview' | 'locations' | 'leads' | 'donations'>('overview')
 
   const kpis = useMemo(() => {
     const donateClicks = events.filter((e) => e.event_type === 'donate_click').length
@@ -79,7 +79,7 @@ export function AdminDashboard() {
         </div>
 
         <nav className="mt-8 flex gap-1 border-b border-pad-purple-700/10">
-          {(['overview', 'leads', 'donations'] as const).map((t) => (
+          {(['overview', 'locations', 'leads', 'donations'] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -96,6 +96,7 @@ export function AdminDashboard() {
 
         <div className="mt-6">
           {tab === 'overview' && <RecentEvents events={events} />}
+          {tab === 'locations' && <LocationsBreakdown sessions={sessions} events={events} />}
           {tab === 'leads' && <LeadsTable leads={leads} />}
           {tab === 'donations' && <DonationsTable donations={donations} onAdd={addDonation} />}
         </div>
@@ -132,6 +133,127 @@ function RecentEvents({ events }: { events: ReturnType<typeof useAdminData>['eve
           )}
         </tbody>
       </table>
+    </div>
+  )
+}
+
+function LocationsBreakdown({
+  sessions,
+  events,
+}: {
+  sessions: ReturnType<typeof useAdminData>['sessions']
+  events: ReturnType<typeof useAdminData>['events']
+}) {
+  const rows = useMemo(() => {
+    const byRegion = new Map<
+      string,
+      { region: string; country: string; visits: number; donateClicks: number; joinClicks: number }
+    >()
+
+    const sessionRegion = new Map<string, string>()
+
+    for (const s of sessions) {
+      const key = s.geo_region_code
+        ? `${s.geo_region_code}|${s.geo_country_code ?? ''}`
+        : s.geo_country
+          ? `?|${s.geo_country_code ?? ''}`
+          : 'unknown'
+      sessionRegion.set(s.id, key)
+
+      const existing = byRegion.get(key)
+      if (existing) {
+        existing.visits += 1
+      } else {
+        byRegion.set(key, {
+          region: s.geo_region || (s.geo_country ? '(region unknown)' : 'Unknown'),
+          country: s.geo_country || '',
+          visits: 1,
+          donateClicks: 0,
+          joinClicks: 0,
+        })
+      }
+    }
+
+    for (const e of events) {
+      if (!e.session_id) continue
+      const key = sessionRegion.get(e.session_id)
+      if (!key) continue
+      const row = byRegion.get(key)
+      if (!row) continue
+      if (e.event_type === 'donate_click') row.donateClicks += 1
+      if (e.event_type === 'join_click') row.joinClicks += 1
+    }
+
+    return Array.from(byRegion.values()).sort((a, b) => b.visits - a.visits)
+  }, [sessions, events])
+
+  const geoCoverage = sessions.length ? sessions.filter((s) => s.geo_region).length / sessions.length : 0
+
+  return (
+    <div>
+      <div className="mb-3 flex items-center justify-between">
+        <p className="text-sm text-pad-purple-700/60">
+          Approximate location of visits and clicks, inferred from IP address. This is where interest comes from,
+          not confirmed donations — PAD's donation records don't include location until entered from the weekly
+          export.
+        </p>
+        <button
+          onClick={() =>
+            downloadCsv(
+              'pad-locations.csv',
+              rows.map((r) => ({
+                region: r.region,
+                country: r.country,
+                visits: r.visits,
+                donate_clicks: r.donateClicks,
+                join_clicks: r.joinClicks,
+              })),
+            )
+          }
+          className="shrink-0 rounded-full border border-pad-purple-700/15 px-4 py-2 text-sm font-medium text-pad-purple-700 hover:bg-white"
+        >
+          Export CSV
+        </button>
+      </div>
+
+      {sessions.length > 0 && geoCoverage < 0.5 && (
+        <p className="mb-3 text-xs text-amber-600">
+          Only {(geoCoverage * 100).toFixed(0)}% of visits have a resolved location so far — the lookup runs
+          shortly after each visit and some may still be pending or failed silently (ad blockers, offline).
+        </p>
+      )}
+
+      <div className="overflow-hidden rounded-2xl border border-pad-purple-700/10 bg-white">
+        <table className="w-full text-left text-sm">
+          <thead className="bg-pad-purple-700/5 text-pad-purple-700/60">
+            <tr>
+              <th className="px-4 py-3 font-medium">Region</th>
+              <th className="px-4 py-3 font-medium">Country</th>
+              <th className="px-4 py-3 font-medium">Visits</th>
+              <th className="px-4 py-3 font-medium">Donate clicks</th>
+              <th className="px-4 py-3 font-medium">Join clicks</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={`${r.region}-${r.country}`} className="border-t border-pad-purple-700/5">
+                <td className="px-4 py-2.5 font-medium text-pad-purple-900">{r.region}</td>
+                <td className="px-4 py-2.5 text-pad-purple-700/60">{r.country || '—'}</td>
+                <td className="px-4 py-2.5">{r.visits}</td>
+                <td className="px-4 py-2.5">{r.donateClicks}</td>
+                <td className="px-4 py-2.5">{r.joinClicks}</td>
+              </tr>
+            ))}
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-4 py-8 text-center text-pad-purple-700/40">
+                  No visits yet.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

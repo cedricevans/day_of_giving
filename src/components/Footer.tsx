@@ -8,7 +8,9 @@ export function Footer() {
       <p className="mt-4 text-sm text-purple-200/60">{campaign.org}</p>
       <p className="mt-1 text-xs text-purple-200/40">
         All gifts are processed securely on pad.org. This page does not
-        collect or store payment information.
+        collect or store payment information. We log approximate visit
+        location (state/country, from IP address) to understand where
+        support for this campaign is coming from.
       </p>
       <a
         href="/admin"

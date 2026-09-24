@@ -1,7 +1,9 @@
 import { isSupabaseConfigured, supabase } from './supabase'
+import { lookupGeo } from './geo'
 import type { EventType, LeadIntent } from './database.types'
 
 const SESSION_KEY = 'pad_dog_session_id'
+const GEO_DONE_KEY = 'pad_dog_geo_done'
 
 let sessionIdPromise: Promise<string | null> | null = null
 
@@ -43,10 +45,28 @@ async function getSessionId(): Promise<string | null> {
       return null
     }
     sessionStorage.setItem(SESSION_KEY, data.id)
+    attachGeo(data.id)
     return data.id
   })()
 
   return sessionIdPromise
+}
+
+/** Fire-and-forget: resolves approximate location and patches it onto the session row. Runs once per browser tab. */
+function attachGeo(sessionId: string) {
+  if (sessionStorage.getItem(GEO_DONE_KEY)) return
+  sessionStorage.setItem(GEO_DONE_KEY, '1')
+
+  lookupGeo().then((geo) => {
+    if (!geo) return
+    supabase
+      .from('sessions')
+      .update(geo)
+      .eq('id', sessionId)
+      .then(({ error }) => {
+        if (error) console.warn('[tracking] failed to attach geo', error)
+      })
+  })
 }
 
 export async function logEvent(eventType: EventType, metadata: Record<string, unknown> = {}) {

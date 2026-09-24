@@ -21,4 +21,9 @@ if (!isSupabaseConfigured) {
 export const supabase = createClient<Database>(
   isSupabaseConfigured ? url : 'https://placeholder.supabase.co',
   isSupabaseConfigured ? anonKey : 'placeholder-anon-key',
+  // This project's tables live in the "pad" schema of the shared
+  // KustomGroupWebApps Supabase project, not "public" — every app there
+  // gets its own schema. "pad" must be added to that project's Settings →
+  // API → Exposed schemas before requests here will succeed.
+  { db: { schema: 'pad' } },
 )
