@@ -1,49 +1,57 @@
-import { useRef } from 'react'
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { Photo } from './Photo'
+import { SectionHeading } from './SectionHeading'
 import { photos, type PhotoSlot } from '../lib/photos'
 
-// Even 4-column grid, uniform aspect ratio, one shared parallax drift so
-// every tile moves together instead of columns racing at different speeds.
-const tiles: PhotoSlot[] = ['wall1', 'wall4', 'wall2', 'wall7', 'wall3', 'wall5', 'wall6']
-
-function Tile({ slot, index }: { slot: PhotoSlot; index: number }) {
-  return (
-    <motion.figure
-      initial={{ opacity: 0, y: 32 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.3 }}
-      transition={{ duration: 0.6, delay: (index % 4) * 0.08, ease: [0.22, 1, 0.36, 1] }}
-      className="group relative aspect-square overflow-hidden rounded-2xl shadow-lg"
-    >
-      <Photo slot={slot} className="absolute inset-0 h-full w-full transition-transform duration-700 group-hover:scale-110" />
-      <div className="absolute inset-0 bg-gradient-to-t from-pad-purple-950/80 via-pad-purple-950/0 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-      <figcaption className="absolute inset-x-0 bottom-0 translate-y-2 p-4 text-sm font-semibold text-white opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
-        {photos[slot].label}
-      </figcaption>
-    </motion.figure>
-  )
-}
+// Bento layout on a 4-column grid: one 2x2 feature, four 1x1, two 2x1.
+// 4 + 4 + 4 cells = three full rows, so there's never an empty trailing slot.
+const tiles: { slot: PhotoSlot; span: string }[] = [
+  { slot: 'wall4', span: 'col-span-2 row-span-2' },
+  { slot: 'wall1', span: '' },
+  { slot: 'wall2', span: '' },
+  { slot: 'wall7', span: '' },
+  { slot: 'wall3', span: '' },
+  { slot: 'wall5', span: 'col-span-2' },
+  { slot: 'wall6', span: 'col-span-2' },
+]
 
 export function PhotoWall() {
-  const ref = useRef<HTMLElement>(null)
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] })
-  const drift = useTransform(scrollYProgress, [0, 1], ['3%', '-3%'])
-
   return (
-    <section ref={ref} className="relative overflow-hidden bg-pad-cream px-6 py-24 md:py-32">
+    <section id="moments" className="relative overflow-hidden bg-pad-cream px-6 pb-16 pt-24 lg:px-8 lg:pb-20 lg:pt-32">
       <div className="mx-auto max-w-6xl">
-        <div className="mb-14 text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.3em] text-pad-gold-600">This is P.A.D.</p>
-          <h2 className="mt-4 font-[family-name:var(--font-display)] text-5xl font-extrabold text-pad-purple-900 md:text-7xl">
-            Moments you <span className="italic text-pad-gold-600">make possible.</span>
-          </h2>
-        </div>
-        <motion.div style={{ y: drift }} className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 md:gap-5">
-          {tiles.map((slot, i) => (
-            <Tile key={slot} slot={slot} index={i} />
+        <SectionHeading
+          eyebrow="This is P.A.D."
+          align="center"
+          title={
+            <>
+              Moments you <span className="italic text-pad-gold-600">make possible.</span>
+            </>
+          }
+          className="mb-14"
+        />
+
+        <div className="grid auto-rows-[150px] grid-cols-2 gap-3 sm:auto-rows-[190px] md:grid-cols-4 md:gap-4 lg:auto-rows-[220px]">
+          {tiles.map(({ slot, span }, i) => (
+            <motion.figure
+              key={slot}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.6, delay: i * 0.06, ease: [0.22, 1, 0.36, 1] }}
+              className={`group relative overflow-hidden rounded-2xl bg-pad-purple-800 shadow-[0_12px_40px_-16px_rgba(43,20,84,0.45)] ring-1 ring-pad-purple-900/5 ${span}`}
+            >
+              <Photo
+                slot={slot}
+                className="absolute inset-0 h-full w-full transition-transform duration-700 ease-out group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-pad-purple-950/85 via-pad-purple-950/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <figcaption className="absolute inset-x-0 bottom-0 flex translate-y-2 items-center gap-2 p-4 text-sm font-semibold text-white opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+                <span className="h-px w-5 bg-pad-gold-400" />
+                {photos[slot].label}
+              </figcaption>
+            </motion.figure>
           ))}
-        </motion.div>
+        </div>
       </div>
     </section>
   )

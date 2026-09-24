@@ -43,6 +43,10 @@ html {
   scroll-behavior: smooth;
 }
 
+section[id] {
+  scroll-margin-top: 72px;
+}
+
 @utility text-gold-gradient {
   background: linear-gradient(100deg, #b8892a 0%, #f3dc9a 35%, #c9a13a 55%, #fbe8b0 75%, #a37f1f 100%);
   background-size: 200% auto;

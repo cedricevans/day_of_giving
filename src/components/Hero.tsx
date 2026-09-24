@@ -27,7 +27,7 @@ export function Hero() {
   }, [])
 
   return (
-    <section ref={sectionRef} className="grain relative flex min-h-[100svh] items-center overflow-hidden bg-pad-purple-950">
+    <section id="top" ref={sectionRef} className="grain relative flex min-h-[100svh] items-center overflow-hidden bg-pad-purple-950">
       <motion.div style={{ y: photoY, scale: photoScale }} className="absolute inset-0">
         <Photo slot="hero" plain className="h-full w-full" alt="Phi Alpha Delta members together" />
       </motion.div>
@@ -41,19 +41,21 @@ export function Hero() {
         alt=""
         aria-hidden="true"
         style={{ y: crestY, rotate: crestRotate }}
-        className="pointer-events-none absolute -right-32 top-10 w-[520px] opacity-[0.13] md:-right-20 md:w-[720px]"
+        className="pointer-events-none absolute -right-40 top-16 hidden w-[640px] opacity-[0.06] lg:block"
       />
 
       <motion.div
         style={{ y: contentY, opacity: contentOpacity }}
-        className="relative z-10 mx-auto w-full max-w-6xl px-6 pb-24 pt-28 md:pt-32"
+        className="relative z-10 mx-auto w-full max-w-6xl px-6 pb-28 pt-32 lg:px-8 lg:pt-36"
       >
-        <motion.div custom={0} variants={rise} initial="hidden" animate="show" className="mb-6 flex items-center gap-3">
-          <img src={crest} alt="Phi Alpha Delta crest" className="h-14 w-auto drop-shadow-[0_0_24px_rgba(201,161,58,0.5)] md:h-16" />
-          <div className="leading-tight">
-            <p className="text-xs font-bold uppercase tracking-[0.3em] text-pad-gold-300">Phi Alpha Delta</p>
-            <p className="text-xs uppercase tracking-[0.2em] text-purple-100/60">Law Fraternity, International · Est. {padFacts.founded}</p>
-          </div>
+        <motion.div custom={0} variants={rise} initial="hidden" animate="show" className="mb-8 flex flex-wrap items-center gap-3">
+          <span className="inline-flex items-center gap-2 rounded-full border border-pad-gold-400/40 bg-pad-purple-950/40 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.25em] text-pad-gold-300 backdrop-blur-md">
+            <span className="h-1.5 w-1.5 rounded-full bg-pad-gold-400 shadow-[0_0_10px_rgba(232,205,133,0.9)]" />
+            2026 Campaign
+          </span>
+          <span className="hidden text-[11px] uppercase tracking-[0.25em] text-purple-100/60 sm:inline">
+            Law Fraternity, International · Est. {padFacts.founded}
+          </span>
         </motion.div>
 
         <motion.h1
@@ -61,15 +63,14 @@ export function Hero() {
           variants={rise}
           initial="hidden"
           animate="show"
-          className="font-[family-name:var(--font-display)] text-[19vw] font-extrabold leading-[0.85] tracking-tight text-white sm:text-[12vw] lg:text-[10rem]"
+          className="font-[family-name:var(--font-display)] text-[19vw] font-extrabold leading-[0.88] tracking-tight text-white sm:text-[12vw] lg:text-[9rem]"
         >
           Day of
           <br />
           <span className="text-gold-gradient italic">Giving</span>
-          <span className="mt-2 block font-sans text-[0.3em] sm:ml-5 sm:mt-0 sm:inline sm:align-top sm:text-[0.22em] font-black not-italic tracking-normal text-pad-gold-300">2026</span>
         </motion.h1>
 
-        <motion.p custom={2} variants={rise} initial="hidden" animate="show" className="mt-8 max-w-xl text-lg leading-relaxed text-purple-100/85 md:text-xl">
+        <motion.p custom={2} variants={rise} initial="hidden" animate="show" className="mt-8 max-w-xl border-l-2 border-pad-gold-400/60 pl-5 text-lg leading-relaxed text-purple-100/85 md:text-xl">
           {padFacts.members.toLocaleString()} members. {padFacts.chapters} chapters. One day to invest in the next
           generation of lawyers, from first-year pre-law students to the bench.
         </motion.p>

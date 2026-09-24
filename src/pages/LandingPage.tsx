@@ -1,3 +1,4 @@
+import { SiteHeader } from '../components/SiteHeader'
 import { Hero } from '../components/Hero'
 import { ValuesMarquee } from '../components/ValuesMarquee'
 import { Stats } from '../components/Stats'
@@ -14,6 +15,7 @@ import { Footer } from '../components/Footer'
 export function LandingPage() {
   return (
     <div className="min-h-screen overflow-x-hidden">
+      <SiteHeader />
       <Hero />
       <ValuesMarquee />
       <Stats />

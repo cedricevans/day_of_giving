@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { Photo } from './Photo'
 import { TiltCard } from './TiltCard'
+import { SectionHeading } from './SectionHeading'
 import type { PhotoSlot } from '../lib/photos'
 
 const audiences: { slot: PhotoSlot; kicker: string; title: string; body: string; archival?: boolean }[] = [
@@ -27,28 +28,28 @@ const audiences: { slot: PhotoSlot; kicker: string; title: string; body: string;
 
 export function Audiences() {
   return (
-    <section className="relative overflow-hidden bg-pad-cream px-6 py-24 md:py-32">
+    <section id="mission" className="relative overflow-hidden bg-pad-cream px-6 py-24 lg:px-8 lg:py-32">
       <div className="mx-auto max-w-6xl">
-        <div className="mb-14 flex flex-col justify-between gap-6 md:flex-row md:items-end">
-          <h2 className="max-w-2xl font-[family-name:var(--font-display)] text-5xl font-extrabold leading-[0.95] text-pad-purple-900 md:text-7xl">
-            One fraternity.
-            <br />
-            <span className="italic text-pad-gold-600">Every generation.</span>
-          </h2>
-          <p className="max-w-sm text-lg text-pad-purple-700/70">
-            Your gift reaches every stage of a P.A.D. member's journey, from the first pre-law meeting to the courtroom.
-          </p>
-        </div>
+        <SectionHeading
+          eyebrow="Who you support"
+          title={
+            <>
+              One fraternity. <span className="italic text-pad-gold-600">Every generation.</span>
+            </>
+          }
+          description="Your gift reaches every stage of a P.A.D. member's journey, from the first pre-law meeting to the courtroom."
+          className="mb-16"
+        />
 
         <div className="grid gap-6 md:grid-cols-3">
           {audiences.map((a, i) => (
             <motion.div
               key={a.title}
-              initial={{ opacity: 0, y: 60 }}
+              initial={{ opacity: 0, y: 32 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.2 }}
+              viewport={{ once: true, amount: 0.1 }}
               transition={{ duration: 0.7, delay: i * 0.12, ease: [0.22, 1, 0.36, 1] }}
-              className={i === 1 ? 'md:mt-16' : ''}
+              className={i === 1 ? 'md:mt-12' : ''}
             >
               <TiltCard className="h-[480px] overflow-hidden rounded-[2rem] shadow-[0_30px_80px_-20px_rgba(43,20,84,0.55)] ring-1 ring-pad-purple-900/10 transition-shadow duration-500 hover:shadow-[0_40px_100px_-20px_rgba(201,161,58,0.55)] hover:ring-2 hover:ring-pad-gold-400 md:h-[540px]">
                 <Photo

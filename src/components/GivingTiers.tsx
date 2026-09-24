@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { campaign, withTracking } from '../lib/campaign'
 import { logEvent } from '../lib/tracking'
 import { TiltCard } from './TiltCard'
+import { SectionHeading } from './SectionHeading'
 
 // Tier names are campaign flavor only. 25-1000 are PAD's donate.asp preset
 // amounts; 2500/10000 route to PAD's custom-amount field (see campaign.ts).
@@ -20,18 +21,20 @@ const featured = 100
 
 export function GivingTiers() {
   return (
-    <section id="give-tiers" className="relative overflow-hidden bg-pad-purple-950 px-6 py-24 md:py-32">
+    <section id="give-tiers" className="relative overflow-hidden bg-pad-purple-950 px-6 py-24 lg:px-8 lg:py-32">
       <div className="absolute left-1/2 top-0 h-[600px] w-[900px] -translate-x-1/2 rounded-full bg-pad-purple-600/30 blur-[140px]" />
       <div className="relative mx-auto max-w-6xl">
-        <div className="text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.3em] text-pad-gold-300">Pick your impact</p>
-          <h2 className="mt-4 font-[family-name:var(--font-display)] text-5xl font-extrabold text-white md:text-7xl">
-            Every gift <span className="text-gold-gradient italic">counts.</span>
-          </h2>
-          <p className="mx-auto mt-5 max-w-xl text-lg text-purple-100/70">
-            Tap an amount to head to PAD's secure donation page, then enter the same amount there. One-time or monthly.
-          </p>
-        </div>
+        <SectionHeading
+          eyebrow="Pick your impact"
+          tone="dark"
+          align="center"
+          title={
+            <>
+              Every gift <span className="text-gold-gradient italic">counts.</span>
+            </>
+          }
+          description="Tap an amount to head to PAD's secure donation page, then enter the same amount there. One-time or monthly."
+        />
 
         <div className="mt-16 grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
           {campaign.giftAmounts.map((amount, i) => {

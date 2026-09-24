@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { Photo } from './Photo'
 import { padFacts } from '../lib/campaign'
+import { SectionHeading } from './SectionHeading'
 
 // Sourced from pad.org/page/history and Wikipedia (founding city, 1972 merger).
 const milestones = [
@@ -36,7 +37,7 @@ export function Heritage() {
   const bigYearX = useTransform(scrollYProgress, [0, 1], ['10%', '-30%'])
 
   return (
-    <section ref={ref} className="grain relative overflow-hidden bg-pad-purple-900 px-6 py-24 md:py-32">
+    <section id="heritage" ref={ref} className="grain relative overflow-hidden bg-pad-purple-900 px-6 py-24 lg:px-8 lg:py-32">
       <motion.p
         style={{ x: bigYearX }}
         aria-hidden="true"
@@ -45,12 +46,17 @@ export function Heritage() {
         Est. 1902
       </motion.p>
 
-      <div className="relative mx-auto grid max-w-6xl items-start gap-16 md:grid-cols-2">
-        <div className="md:sticky md:top-24">
-          <p className="text-xs font-bold uppercase tracking-[0.3em] text-pad-gold-300">Our heritage</p>
-          <h2 className="mt-4 font-[family-name:var(--font-display)] text-5xl font-extrabold leading-[0.95] text-white md:text-6xl">
-            Over a century of <span className="text-gold-gradient italic">firsts.</span>
-          </h2>
+      <div className="relative mx-auto grid max-w-6xl items-start gap-16 md:grid-cols-2 lg:gap-24">
+        <div className="md:sticky md:top-28">
+          <SectionHeading
+            eyebrow="Our heritage"
+            tone="dark"
+            title={
+              <>
+                Over a century of <span className="text-gold-gradient italic">firsts.</span>
+              </>
+            }
+          />
           <div className="relative mt-10 aspect-[4/5] overflow-hidden rounded-[2rem] ring-1 ring-pad-gold-400/30">
             <motion.div style={{ y: photoY }} className="absolute -inset-y-[12%] inset-x-0">
               <Photo slot="heritage" tone="archival" className="h-full w-full" alt="Phi Alpha Delta history" />

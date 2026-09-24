@@ -30,7 +30,7 @@ const stats = [
 
 export function Stats() {
   return (
-    <section className="relative bg-pad-purple-950 px-6 py-20 md:py-28">
+    <section className="relative border-b border-white/5 bg-pad-purple-950 px-6 py-16 lg:px-8 lg:py-20">
       <div className="mx-auto grid max-w-6xl grid-cols-2 gap-x-6 gap-y-12 md:grid-cols-4">
         {stats.map((s) => (
           <div key={s.label} className="border-l-2 border-pad-gold-500/60 pl-5">
