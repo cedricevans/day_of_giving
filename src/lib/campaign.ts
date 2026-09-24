@@ -17,6 +17,25 @@ export const campaign = {
   // once this campaign's fund id is created (see README + plan doc Step 1).
   donateUrl: import.meta.env.VITE_PAD_DONATE_URL || 'https://www.pad.org/donations/donate.asp?id=20711',
   joinUrl: import.meta.env.VITE_PAD_JOIN_URL || 'https://www.pad.org/general/register_start.asp',
+  // ISO timestamp for the countdown, e.g. '2026-11-08T00:00:00-05:00'. The
+  // countdown stays hidden until this is set; never ship a guessed date.
+  dayOfGivingDate: null as string | null,
+  // 25-1000 match PAD's donate.asp preset buttons exactly. 2500 and 10000
+  // go through PAD's custom-amount field instead (not a preset there, but
+  // still one-time-or-monthly on their secure form).
+  giftAmounts: [25, 50, 100, 250, 500, 1000, 2500, 10000],
+}
+
+// Sourced from pad.org/page/aboutpad and pad.org/page/history (checked 2026-09-24).
+export const padFacts = {
+  members: 330_000,
+  chapters: 650,
+  newMembersPerYear: 10_000,
+  supremeCourtJustices: 4,
+  founded: 1902,
+  values: ['Compassion', 'Courage', 'Diversity', 'Innovation', 'Integrity', 'Professionalism', 'Service'],
+  mission:
+    'Service to the student, the school, the profession, and the community.',
 }
 
 /** Appends UTM + our click-id so a visit can be matched back to a lead/session later. */

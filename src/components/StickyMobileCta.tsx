@@ -8,7 +8,7 @@ export function StickyMobileCta() {
       <a
         href={withTracking(campaign.donateUrl, { utm_campaign: 'sticky_mobile' })}
         onClick={() => logEvent('donate_click', { placement: 'sticky_mobile' })}
-        className="block rounded-full bg-pad-gold-500 py-3 text-center text-base font-bold text-pad-purple-950 shadow-lg active:scale-95"
+        className="btn-gold block rounded-full py-3.5 text-center text-base font-extrabold uppercase tracking-wider active:scale-95"
       >
         Give Now
       </a>

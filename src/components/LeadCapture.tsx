@@ -78,7 +78,7 @@ export function LeadCapture() {
             type="button"
             onClick={() => handleContinue('donate')}
             disabled={status === 'saving'}
-            className="flex-1 rounded-full bg-pad-gold-500 px-8 py-4 text-lg font-bold text-pad-purple-950 shadow-[0_8px_30px_rgba(201,161,58,0.35)] transition-transform hover:scale-[1.02] active:scale-95 disabled:opacity-60"
+            className="btn-gold flex-1 rounded-full px-8 py-4 text-lg font-extrabold transition-transform hover:scale-[1.02] active:scale-95 disabled:opacity-60"
           >
             Continue to Give →
           </button>
