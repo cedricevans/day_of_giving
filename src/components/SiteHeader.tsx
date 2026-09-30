@@ -4,10 +4,10 @@ import { campaign, withTracking } from '../lib/campaign'
 import { logEvent } from '../lib/tracking'
 
 const links = [
-  { href: '#mission', label: 'Mission' },
-  { href: '#heritage', label: 'Heritage' },
+  { href: '#scoreboard', label: 'Scoreboard' },
+  { href: '#wall', label: 'The Wall' },
   { href: '#give-tiers', label: 'Give' },
-  { href: '#moments', label: 'Moments' },
+  { href: '#heritage', label: 'Heritage' },
 ]
 
 /** Transparent over the hero, turns into a frosted purple bar once the page scrolls. */

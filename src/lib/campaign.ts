@@ -11,7 +11,6 @@ export const campaign = {
   name: 'PAD Day of Giving 2026',
   org: 'Phi Alpha Delta Law Fraternity, International',
   goalCents: 5_000_000, // $50,000 — update after Step 1 in the plan doc
-  raisedCents: 0, // updated manually from the weekly YM export until the API is live
   // Fallbacks are real PAD pages so the app never crashes/dead-links when
   // .env isn't set up yet — override with VITE_PAD_DONATE_URL / VITE_PAD_JOIN_URL
   // once this campaign's fund id is created (see README + plan doc Step 1).

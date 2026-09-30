@@ -5,7 +5,8 @@ import { Stats } from '../components/Stats'
 import { Audiences } from '../components/Audiences'
 import { Heritage } from '../components/Heritage'
 import { GivingTiers } from '../components/GivingTiers'
-import { ProgressBar } from '../components/ProgressBar'
+import { Scoreboard } from '../components/Scoreboard'
+import { CommunityWall } from '../components/CommunityWall'
 import { PhotoWall } from '../components/PhotoWall'
 import { LeadCapture } from '../components/LeadCapture'
 import { FinalCta } from '../components/FinalCta'
@@ -17,12 +18,13 @@ export function LandingPage() {
     <div className="min-h-screen overflow-x-hidden">
       <SiteHeader />
       <Hero />
+      <Scoreboard />
       <ValuesMarquee />
+      <CommunityWall />
+      <GivingTiers />
       <Stats />
       <Audiences />
       <Heritage />
-      <GivingTiers />
-      <ProgressBar />
       <PhotoWall />
       <LeadCapture />
       <FinalCta />

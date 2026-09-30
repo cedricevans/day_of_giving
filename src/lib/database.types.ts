@@ -1,4 +1,4 @@
-// Hand-written to match supabase/migrations/0001_init.sql.
+// Hand-written to match supabase/migrations/0001_init.sql through 0004.
 // Regenerate with `supabase gen types typescript --linked --schema pad`
 // once schema exposure is confirmed, and replace this file with the
 // generated output.
@@ -11,6 +11,81 @@ export type EventType =
   | 'scroll_depth'
 
 export type LeadIntent = 'donate' | 'join' | 'unspecified'
+
+/** One row per US state from pad.supporter_map(). Counts are null when few is true (under 3). */
+export interface SupporterMapRow {
+  region_code: string
+  region: string
+  supporters: number | null
+  give_clicks: number | null
+  share: number | null
+  few: boolean
+  total_us: number
+  total_intl: number
+}
+
+export type WallKind = 'why_i_give' | 'shout_out' | 'memory'
+export type WallEmoji = 'clap' | 'heart' | 'fire' | 'scales'
+
+/** Public Wall post as returned by pad.wall_feed(). */
+export type WallPost = {
+  id: string
+  created_at: string
+  display_name: string | null
+  chapter: string | null
+  message: string
+  kind: WallKind
+  reactions: Partial<Record<WallEmoji, number>>
+  mine: WallEmoji[]
+}
+
+export type PollRow = {
+  id: string
+  question: string
+  options: string[]
+  counts: number[]
+  total: number
+  my_vote: number | null
+}
+
+export type ScoreboardRow = {
+  raised_cents: number
+  gift_count: number
+  donor_count: number
+  chapters_participating: number
+  wall_posts: number
+  last_recorded_at: string | null
+}
+
+export type LeaderboardRow = {
+  chapter: string
+  raised_cents: number
+  gifts: number
+  supporters: number
+  posts: number
+}
+
+/** Admin-side row of pad.wall_posts (includes hidden posts). */
+export type WallPostAdminRow = {
+  id: string
+  created_at: string
+  visitor_id: string
+  display_name: string | null
+  chapter: string | null
+  message: string
+  kind: WallKind
+  status: 'published' | 'hidden'
+  hidden_reason: string | null
+}
+
+export type PollAdminRow = {
+  id: string
+  created_at: string
+  question: string
+  options: string[]
+  is_active: boolean
+  sort_order: number
+}
 
 export interface Database {
   pad: {
@@ -126,6 +201,7 @@ export interface Database {
           ym_export_date: string | null
           matched_lead_id: string | null
           notes: string | null
+          chapter: string | null
         }
         Insert: {
           id?: string
@@ -138,6 +214,7 @@ export interface Database {
           ym_export_date?: string | null
           matched_lead_id?: string | null
           notes?: string | null
+          chapter?: string | null
         }
         Update: {
           id?: string
@@ -150,11 +227,86 @@ export interface Database {
           ym_export_date?: string | null
           matched_lead_id?: string | null
           notes?: string | null
+          chapter?: string | null
         }
+        Relationships: []
+      }
+      chapters: {
+        Row: { id: string; created_at: string; name: string }
+        Insert: { id?: string; created_at?: string; name: string }
+        Update: { id?: string; created_at?: string; name?: string }
+        Relationships: []
+      }
+      blocked_words: {
+        Row: { word: string; created_at: string }
+        Insert: { word: string; created_at?: string }
+        Update: { word?: string; created_at?: string }
+        Relationships: []
+      }
+      wall_posts: {
+        Row: WallPostAdminRow
+        Insert: { visitor_id: string; message: string }
+        Update: { status?: WallPostAdminRow['status']; hidden_reason?: string | null }
+        Relationships: []
+      }
+      polls: {
+        Row: PollAdminRow
+        Insert: { question: string; options: string[]; is_active?: boolean; sort_order?: number }
+        Update: { question?: string; options?: string[]; is_active?: boolean; sort_order?: number }
         Relationships: []
       }
     }
     Views: Record<string, never>
-    Functions: Record<string, never>
+    Functions: {
+      scoreboard: {
+        Args: Record<string, never>
+        Returns: ScoreboardRow[]
+      }
+      chapter_leaderboard: {
+        Args: { p_limit?: number }
+        Returns: LeaderboardRow[]
+      }
+      wall_feed: {
+        Args: { p_visitor_id: string; p_limit?: number; p_before?: string | null }
+        Returns: WallPost[]
+      }
+      post_to_wall: {
+        Args: {
+          p_visitor_id: string
+          p_display_name: string | null
+          p_chapter: string | null
+          p_message: string
+          p_kind: WallKind
+        }
+        Returns: Omit<WallPost, 'reactions' | 'mine'>[]
+      }
+      toggle_wall_reaction: {
+        Args: { p_post_id: string; p_visitor_id: string; p_emoji: WallEmoji }
+        Returns: boolean
+      }
+      active_polls: {
+        Args: { p_visitor_id: string }
+        Returns: PollRow[]
+      }
+      vote_poll: {
+        Args: { p_poll_id: string; p_visitor_id: string; p_option_index: number }
+        Returns: undefined
+      }
+      supporter_map: {
+        Args: Record<string, never>
+        Returns: SupporterMapRow[]
+      }
+      set_session_geo: {
+        Args: {
+          p_session_id: string
+          p_country: string | null
+          p_country_code: string | null
+          p_region: string | null
+          p_region_code: string | null
+          p_city: string | null
+        }
+        Returns: undefined
+      }
+    }
   }
 }

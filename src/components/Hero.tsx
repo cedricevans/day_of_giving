@@ -4,7 +4,6 @@ import crest from '../assets/brand/pad-crest.png'
 import { campaign, padFacts, withTracking } from '../lib/campaign'
 import { logEvent } from '../lib/tracking'
 import { Photo } from './Photo'
-import { Countdown } from './Countdown'
 
 const rise = {
   hidden: { opacity: 0, y: 40 },
@@ -27,7 +26,7 @@ export function Hero() {
   }, [])
 
   return (
-    <section id="top" ref={sectionRef} className="grain relative flex min-h-[100svh] items-center overflow-hidden bg-pad-purple-950">
+    <section id="top" ref={sectionRef} className="grain relative flex min-h-[88svh] items-center overflow-hidden bg-pad-purple-950">
       <motion.div style={{ y: photoY, scale: photoScale }} className="absolute inset-0">
         <Photo slot="hero" plain className="h-full w-full" alt="Phi Alpha Delta members together" />
       </motion.div>
@@ -46,7 +45,7 @@ export function Hero() {
 
       <motion.div
         style={{ y: contentY, opacity: contentOpacity }}
-        className="relative z-10 mx-auto w-full max-w-6xl px-6 pb-28 pt-32 lg:px-8 lg:pt-36"
+        className="relative z-10 mx-auto w-full max-w-6xl px-6 pb-20 pt-32 lg:px-8 lg:pt-36"
       >
         <motion.div custom={0} variants={rise} initial="hidden" animate="show" className="mb-8 flex flex-wrap items-center gap-3">
           <span className="inline-flex items-center gap-2 rounded-full border border-pad-gold-400/40 bg-pad-purple-950/40 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.25em] text-pad-gold-300 backdrop-blur-md">
@@ -74,12 +73,6 @@ export function Hero() {
           {padFacts.members.toLocaleString()} members. {padFacts.chapters} chapters. One day to invest in the next
           generation of lawyers, from first-year pre-law students to the bench.
         </motion.p>
-
-        {campaign.dayOfGivingDate && (
-          <motion.div custom={3} variants={rise} initial="hidden" animate="show" className="mt-8">
-            <Countdown iso={campaign.dayOfGivingDate} />
-          </motion.div>
-        )}
 
         <motion.div custom={4} variants={rise} initial="hidden" animate="show" className="mt-10 flex flex-col gap-4 sm:flex-row">
           <a

@@ -3,6 +3,7 @@ import crest from '../assets/brand/pad-crest.png'
 import { useAuth } from '../hooks/useAuth'
 import { useAdminData } from '../hooks/useAdminData'
 import { downloadCsv } from '../lib/csv'
+import { CommunityAdmin } from './CommunityAdmin'
 
 function formatCents(cents: number) {
   return (cents / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' })
@@ -23,7 +24,7 @@ function KpiCard({ label, value, sub }: { label: string; value: string; sub?: st
 export function AdminDashboard() {
   const { signOut } = useAuth()
   const { sessions, events, leads, donations, loading, error, addDonation } = useAdminData()
-  const [tab, setTab] = useState<'overview' | 'locations' | 'leads' | 'donations'>('overview')
+  const [tab, setTab] = useState<'overview' | 'locations' | 'leads' | 'donations' | 'community'>('overview')
 
   const kpis = useMemo(() => {
     const donateClicks = events.filter((e) => e.event_type === 'donate_click').length
@@ -79,7 +80,7 @@ export function AdminDashboard() {
         </div>
 
         <nav className="mt-8 flex gap-1 border-b border-pad-purple-700/10">
-          {(['overview', 'locations', 'leads', 'donations'] as const).map((t) => (
+          {(['overview', 'locations', 'leads', 'donations', 'community'] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -99,6 +100,7 @@ export function AdminDashboard() {
           {tab === 'locations' && <LocationsBreakdown sessions={sessions} events={events} />}
           {tab === 'leads' && <LeadsTable leads={leads} />}
           {tab === 'donations' && <DonationsTable donations={donations} onAdd={addDonation} />}
+          {tab === 'community' && <CommunityAdmin />}
         </div>
       </main>
     </div>
@@ -246,7 +248,7 @@ function LocationsBreakdown({
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-pad-purple-700/40">
+                <td colSpan={6} className="px-4 py-8 text-center text-pad-purple-700/40">
                   No visits yet.
                 </td>
               </tr>
@@ -326,6 +328,7 @@ function DonationsTable({
     amount: '',
     is_recurring: false,
     referral_source: '',
+    chapter: '',
   })
   const [saving, setSaving] = useState(false)
 
@@ -341,11 +344,12 @@ function DonationsTable({
         amount_cents: amountCents,
         is_recurring: form.is_recurring,
         referral_source: form.referral_source || null,
+        chapter: form.chapter.replace(/\s+/g, ' ').trim() || null,
         ym_export_date: new Date().toISOString().slice(0, 10),
         matched_lead_id: null,
         notes: null,
       })
-      setForm({ donor_name: '', donor_email: '', amount: '', is_recurring: false, referral_source: '' })
+      setForm({ donor_name: '', donor_email: '', amount: '', is_recurring: false, referral_source: '', chapter: '' })
       setShowForm(false)
     } finally {
       setSaving(false)
@@ -369,6 +373,7 @@ function DonationsTable({
                   amount: (d.amount_cents / 100).toFixed(2),
                   recurring: d.is_recurring,
                   referral_source: d.referral_source ?? '',
+                  chapter: d.chapter ?? '',
                   created_at: d.created_at,
                 })),
               )
@@ -415,6 +420,13 @@ function DonationsTable({
             onChange={(e) => setForm((f) => ({ ...f, referral_source: e.target.value }))}
             className="rounded-lg border border-pad-purple-700/15 px-3 py-2 text-sm"
           />
+          <input
+            placeholder="Chapter (if known)"
+            maxLength={120}
+            value={form.chapter}
+            onChange={(e) => setForm((f) => ({ ...f, chapter: e.target.value }))}
+            className="col-span-2 rounded-lg border border-pad-purple-700/15 px-3 py-2 text-sm"
+          />
           <label className="col-span-2 flex items-center gap-2 text-sm text-pad-purple-700/70">
             <input
               type="checkbox"
@@ -441,6 +453,7 @@ function DonationsTable({
               <th className="px-4 py-3 font-medium">Amount</th>
               <th className="px-4 py-3 font-medium">Type</th>
               <th className="px-4 py-3 font-medium">Source</th>
+              <th className="px-4 py-3 font-medium">Chapter</th>
               <th className="px-4 py-3 font-medium">Recorded</th>
             </tr>
           </thead>
@@ -454,6 +467,7 @@ function DonationsTable({
                 <td className="px-4 py-2.5 font-semibold text-pad-purple-900">{formatCents(d.amount_cents)}</td>
                 <td className="px-4 py-2.5">{d.is_recurring ? 'Monthly' : 'One-time'}</td>
                 <td className="px-4 py-2.5">{d.referral_source || '—'}</td>
+                <td className="px-4 py-2.5">{d.chapter || '—'}</td>
                 <td className="px-4 py-2.5 text-pad-purple-700/60">{new Date(d.created_at).toLocaleDateString()}</td>
               </tr>
             ))}

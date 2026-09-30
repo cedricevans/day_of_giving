@@ -75,10 +75,13 @@ testing a real submission first.
 
 ### 4. Update campaign copy/goal
 
-`src/lib/campaign.ts` — campaign name, goal amount, gift tier amounts.
-`raisedCents` is a manual number updated from PAD's weekly donation export
-(Step 8 in the plan doc) until PAD's YourMembership API is licensed; there's
-no live donation feed on our side.
+`src/lib/campaign.ts` — campaign name, goal amount, gift tier amounts, and
+`dayOfGivingDate` (the Scoreboard countdown stays hidden until it's set).
+
+The Scoreboard's dollars raised and donor count come from `pad.donations`,
+which admins fill in from PAD's weekly YM export (Admin, Donations tab).
+It updates on the page within 30 seconds of a row being saved, but it is
+only as current as the latest export until the YM API is licensed.
 
 ### 5. Run
 
@@ -96,7 +99,11 @@ npm run dev
   interest and clicks come from, **not** confirmed donations — PAD's
   donation records don't include location unless you add it by hand.
 - **Leads** — captured name/email, CSV export
-- **Donations** — add rows from the weekly YM export, CSV export
+- **Donations** — add rows from the weekly YM export (including chapter,
+  if known), CSV export
+- **Community** — hide or restore Wall posts (or everything from one
+  sender), edit the blocked-words list, add or turn off quick polls, and
+  paste in the official chapter list for the chapter picker
 
 Auth is Supabase Auth (real login, not a shared password) — add/remove
 admin users from the Supabase dashboard, not from the app.
@@ -120,6 +127,27 @@ name/email capture), `donations` (manually populated). RLS: anonymous
 visitors can INSERT tracking rows and UPDATE only their own session's
 geo_* fields within 10 minutes of creation (for the async geo patch);
 only authenticated admin users can read anything or manage donations.
+
+## Scoreboard, Wall, and polls
+
+Added in `supabase/migrations/0004_scoreboard_wall_polls.sql` (applied to
+the live database by hand on 2026-09-29, like 0001 through 0003, so it is not
+in `supabase_migrations.schema_migrations`). Anonymous
+visitors have no direct access to the new tables; every public read and
+write goes through a `pad.*` security definer function (`scoreboard`,
+`chapter_leaderboard`, `wall_feed`, `post_to_wall`, `toggle_wall_reaction`,
+`active_polls`, `vote_poll`). Validation lives in those functions, so it
+can't be skipped by calling the API directly:
+
+- Wall posts publish immediately. They are rejected if they contain a
+  blocked word (whole words, with basic leetspeak like `a$$` caught) or a
+  link, and rate limited to 1 per 30 seconds and 10 per day per browser.
+- "Chapters in" and the Chapter Challenge count chapters named on Give
+  clicks, Wall posts, and donations. Chapter on a Give click is what the
+  visitor typed, not a confirmed gift. The leaderboard ranks by dollars
+  once any donation has a chapter, otherwise by supporters.
+- Reactions and votes are tied to a random per-browser id in
+  localStorage, not to a person.
 
 ## What's not live yet
 
