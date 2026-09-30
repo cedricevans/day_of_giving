@@ -187,7 +187,7 @@ function Poll({ poll, onVote }: { poll: PollRow; onVote: (option: number) => voi
   )
 }
 
-function PostCard({ post, index, onReact }: { post: WallPost; index: number; onReact: (e: WallEmoji) => void }) {
+function PostCard({ post, featured = false, onReact }: { post: WallPost; featured?: boolean; onReact: (e: WallEmoji) => void }) {
   const dark = post.kind === 'why_i_give'
   return (
     <motion.article
@@ -195,8 +195,8 @@ function PostCard({ post, index, onReact }: { post: WallPost; index: number; onR
       initial={{ opacity: 0, y: 20, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className={`mb-4 break-inside-avoid rounded-[1.5rem] p-5 shadow-[0_16px_40px_-24px_rgba(44,20,84,0.55)] ${cardTone[post.kind]} ${
-        index % 3 === 1 ? 'md:rotate-[0.6deg]' : index % 3 === 2 ? 'md:-rotate-[0.6deg]' : ''
+      className={`relative flex flex-col overflow-hidden shadow-[0_16px_40px_-24px_rgba(44,20,84,0.55)] ${cardTone[post.kind]} ${
+        featured ? 'rounded-[2rem] p-7 sm:p-10' : 'rounded-[1.5rem] p-5'
       }`}
     >
       <p
@@ -204,10 +204,28 @@ function PostCard({ post, index, onReact }: { post: WallPost; index: number; onR
           dark ? 'text-pad-gold-300' : 'text-pad-purple-700/70'
         }`}
       >
-        {kindLabel[post.kind]}
+        {featured ? `Latest · ${kindLabel[post.kind]}` : kindLabel[post.kind]}
       </p>
-      <p className="mt-2 whitespace-pre-line break-words text-lg font-semibold leading-snug">{post.message}</p>
-      <p className={`mt-3 text-sm ${dark ? 'text-purple-100/70' : 'text-pad-purple-800/70'}`}>
+      {featured && (
+        <span
+          aria-hidden="true"
+          className={`pointer-events-none absolute -top-6 right-6 font-[family-name:var(--font-display)] text-[10rem] leading-none ${
+            dark ? 'text-white/10' : 'text-pad-purple-900/10'
+          }`}
+        >
+          &ldquo;
+        </span>
+      )}
+      <p
+        className={`mt-2 whitespace-pre-line break-words ${
+          featured
+            ? 'font-[family-name:var(--font-display)] text-2xl font-bold leading-snug sm:text-3xl'
+            : 'text-lg font-semibold leading-snug'
+        }`}
+      >
+        {post.message}
+      </p>
+      <p className={`mt-auto pt-3 text-sm ${dark ? 'text-purple-100/70' : 'text-pad-purple-800/70'}`}>
         <span className="font-bold">{post.display_name || 'A P.A.D. supporter'}</span>
         {post.chapter && <span> · {post.chapter}</span>}
         <span> · {timeAgo(post.created_at)}</span>
@@ -242,83 +260,113 @@ function PostCard({ post, index, onReact }: { post: WallPost; index: number; onR
   )
 }
 
-const wallPoints = [
-  'Posts go live the moment you share them',
-  'Tag your chapter to climb the Chapter Challenge',
-  'React to the stories that move you',
-]
+const wallPoints = ['Posts go live instantly', 'Tag your chapter to climb the board', 'React to the stories that move you']
+
+function EmptyWall() {
+  return (
+    <div className="relative overflow-hidden rounded-[2rem] border-2 border-dashed border-pad-purple-700/20 bg-white/60 p-8 text-center sm:p-12">
+      <span aria-hidden="true" className="font-[family-name:var(--font-display)] text-7xl leading-none text-pad-gold-500/40">
+        &ldquo;
+      </span>
+      <p className="mt-2 font-[family-name:var(--font-display)] text-2xl font-bold text-pad-purple-950 sm:text-3xl">
+        The Wall is open.
+      </p>
+      <p className="mx-auto mt-3 max-w-sm text-pad-purple-800/70">
+        Be the first voice of the Week of Giving. Share why you give, shout out your chapter, or post a favorite P.A.D. memory.
+      </p>
+      <a
+        href="#wall-composer"
+        className="mt-6 inline-flex rounded-full bg-pad-purple-900 px-6 py-3 text-sm font-bold text-pad-gold-300 transition-transform hover:scale-105 lg:hidden"
+      >
+        Add your voice
+      </a>
+      <p className="mt-6 hidden text-sm font-semibold text-pad-purple-700/60 lg:block">Add yours on the right &rarr;</p>
+    </div>
+  )
+}
 
 export function CommunityWall() {
-  const { posts, hasMore, loadMore, post, react } = useWall()
+  const { posts, loaded, hasMore, loadMore, post, react } = useWall()
   const { polls, vote } = usePolls()
-  const hasFeed = posts.length > 0 || polls.length > 0
+  const [featured, ...rest] = posts
+
+  const pollList = polls.map((p) => <Poll key={p.id} poll={p} onVote={(i) => vote(p.id, i)} />)
 
   return (
     <section id="wall" className="relative overflow-hidden bg-pad-cream px-6 py-24 lg:px-8 lg:py-32">
       <div className="mx-auto max-w-6xl">
-        <div className="grid items-center gap-12 lg:grid-cols-[1fr_1.05fr] lg:gap-20">
-          <div>
-            <SectionHeading
-              eyebrow="The Wall"
-              title={
-                <>
-                  This is <span className="italic text-pad-gold-600">our</span> week. Say it loud.
-                </>
-              }
-              description="Tell us why you give, shout out your chapter, or share a P.A.D. memory."
-            />
-            <ul className="mt-10 space-y-4">
-              {wallPoints.map((t) => (
-                <li key={t} className="flex items-center gap-4 text-pad-purple-900">
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-pad-purple-900 text-pad-gold-300 shadow-[0_6px_16px_-6px_rgba(43,20,84,0.6)]">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true">
-                      <path d="M5 12l5 5L20 7" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </span>
-                  <span className="font-medium">{t}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {isSupabaseConfigured ? (
-            <Composer onPost={post} />
-          ) : (
-            <p className="rounded-3xl bg-white p-8 text-center text-pad-purple-700/70">The Wall is warming up. Check back soon.</p>
-          )}
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <SectionHeading
+            eyebrow="The Wall"
+            title={
+              <>
+                This is <span className="italic text-pad-gold-600">our</span> week. Say it loud.
+              </>
+            }
+            description="Tell us why you give, shout out your chapter, or share a P.A.D. memory."
+          />
+          <ul className="flex flex-wrap gap-2 lg:max-w-xs lg:justify-end">
+            {wallPoints.map((t) => (
+              <li
+                key={t}
+                className="rounded-full bg-pad-purple-900/5 px-3.5 py-1.5 text-xs font-semibold text-pad-purple-800"
+              >
+                {t}
+              </li>
+            ))}
+          </ul>
         </div>
 
-        {hasFeed && (
-          <div className="mt-16 border-t border-pad-purple-900/10 pt-12">
-            <div className="columns-1 gap-4 sm:columns-2 lg:columns-3">
-              <AnimatePresence initial={false}>
-                {posts.slice(0, 1).map((p, i) => (
-                  <PostCard key={p.id} post={p} index={i} onReact={(e) => react(p.id, e)} />
-                ))}
-              </AnimatePresence>
-              {polls.map((p) => (
-                <div key={p.id} className="mb-4 break-inside-avoid">
-                  <Poll poll={p} onVote={(i) => vote(p.id, i)} />
-                </div>
-              ))}
-              <AnimatePresence initial={false}>
-                {posts.slice(1).map((p, i) => (
-                  <PostCard key={p.id} post={p} index={i + 1} onReact={(e) => react(p.id, e)} />
-                ))}
-              </AnimatePresence>
+        {isSupabaseConfigured ? (
+          <div className="mt-12 grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
+            <aside id="wall-composer" className="scroll-mt-24 space-y-5 lg:sticky lg:top-24 lg:col-start-2 lg:row-start-1">
+              <Composer onPost={post} />
+              {pollList.length > 0 && <div className="hidden space-y-5 lg:block">{pollList}</div>}
+            </aside>
+
+            <div className="lg:col-start-1 lg:row-start-1">
+              <div className="mb-5 flex items-center gap-2.5 text-xs font-extrabold uppercase tracking-[0.25em] text-pad-purple-700/70">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-pad-gold-500 opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-pad-gold-500" />
+                </span>
+                Live from the community
+              </div>
+
+              {featured ? (
+                <>
+                  <AnimatePresence initial={false} mode="popLayout">
+                    <PostCard key={featured.id} post={featured} featured onReact={(e) => react(featured.id, e)} />
+                  </AnimatePresence>
+                  {rest.length > 0 && (
+                    <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                      <AnimatePresence initial={false}>
+                        {rest.map((p) => (
+                          <PostCard key={p.id} post={p} onReact={(e) => react(p.id, e)} />
+                        ))}
+                      </AnimatePresence>
+                    </div>
+                  )}
+                  {hasMore && (
+                    <div className="mt-6 text-center">
+                      <button
+                        onClick={loadMore}
+                        className="rounded-full border-2 border-pad-purple-700/20 px-8 py-3 font-semibold text-pad-purple-900 transition-colors hover:border-pad-purple-700"
+                      >
+                        Load more
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                loaded && <EmptyWall />
+              )}
             </div>
 
-            {hasMore && (
-              <div className="mt-4 text-center">
-                <button
-                  onClick={loadMore}
-                  className="rounded-full border-2 border-pad-purple-700/20 px-8 py-3 font-semibold text-pad-purple-900 transition-colors hover:border-pad-purple-700"
-                >
-                  Load more
-                </button>
-              </div>
-            )}
+            {pollList.length > 0 && <div className="space-y-5 lg:hidden">{pollList}</div>}
           </div>
+        ) : (
+          <p className="mt-12 rounded-3xl bg-white p-8 text-center text-pad-purple-700/70">The Wall is warming up. Check back soon.</p>
         )}
       </div>
     </section>
