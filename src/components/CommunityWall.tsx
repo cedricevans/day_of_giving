@@ -262,7 +262,7 @@ export function CommunityWall() {
               eyebrow="The Wall"
               title={
                 <>
-                  This is <span className="italic text-pad-gold-600">our</span> day. Say it loud.
+                  This is <span className="italic text-pad-gold-600">our</span> week. Say it loud.
                 </>
               }
               description="Tell us why you give, shout out your chapter, or share a P.A.D. memory."

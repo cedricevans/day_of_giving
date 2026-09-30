@@ -4,7 +4,6 @@ import { campaign, withTracking } from '../lib/campaign'
 import { useScoreboard } from '../lib/community'
 import { logEvent } from '../lib/tracking'
 import { ChapterInput } from './ChapterInput'
-import { Countdown } from './Countdown'
 
 function dollars(cents: number) {
   return (cents / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
@@ -58,7 +57,6 @@ export function Scoreboard() {
             </span>
             The Scoreboard
           </p>
-          {campaign.dayOfGivingDate && <Countdown iso={campaign.dayOfGivingDate} />}
         </div>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[1.35fr_1fr] lg:gap-8">

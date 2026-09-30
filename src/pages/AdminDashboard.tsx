@@ -47,7 +47,7 @@ export function AdminDashboard() {
         <div className="flex items-center gap-3">
           <img src={crest} alt="" className="h-9 w-auto" />
           <div>
-            <h1 className="font-semibold text-pad-purple-900">Day of Giving — Admin</h1>
+            <h1 className="font-semibold text-pad-purple-900">Week of Giving — Admin</h1>
             <p className="text-xs text-pad-purple-700/50">Live click/lead tracking · donations from weekly YM export</p>
           </div>
         </div>

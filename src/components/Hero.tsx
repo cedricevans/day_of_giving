@@ -4,6 +4,7 @@ import crest from '../assets/brand/pad-crest.png'
 import { campaign, padFacts, withTracking } from '../lib/campaign'
 import { logEvent } from '../lib/tracking'
 import { Photo } from './Photo'
+import { Countdown } from './Countdown'
 
 const rise = {
   hidden: { opacity: 0, y: 40 },
@@ -64,15 +65,21 @@ export function Hero() {
           animate="show"
           className="font-[family-name:var(--font-display)] text-[19vw] font-extrabold leading-[0.88] tracking-tight text-white sm:text-[12vw] lg:text-[9rem]"
         >
-          Day of
+          Week of
           <br />
           <span className="text-gold-gradient italic">Giving</span>
         </motion.h1>
 
         <motion.p custom={2} variants={rise} initial="hidden" animate="show" className="mt-8 max-w-xl border-l-2 border-pad-gold-400/60 pl-5 text-lg leading-relaxed text-purple-100/85 md:text-xl">
-          {padFacts.members.toLocaleString()} members. {padFacts.chapters} chapters. One day to invest in the next
+          {padFacts.members.toLocaleString()} members. {padFacts.chapters} chapters. One week to invest in the next
           generation of lawyers, from first-year pre-law students to the bench.
         </motion.p>
+
+        {campaign.dayOfGivingDate && (
+          <motion.div custom={3} variants={rise} initial="hidden" animate="show" className="mt-10">
+            <Countdown start={campaign.dayOfGivingDate} end={campaign.dayOfGivingEnd} />
+          </motion.div>
+        )}
 
         <motion.div custom={4} variants={rise} initial="hidden" animate="show" className="mt-10 flex flex-col gap-4 sm:flex-row">
           <a

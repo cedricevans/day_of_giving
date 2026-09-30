@@ -8,7 +8,7 @@
 const utmSource = import.meta.env.VITE_CAMPAIGN_UTM_SOURCE || 'day-of-giving-2026'
 
 export const campaign = {
-  name: 'PAD Day of Giving 2026',
+  name: 'PAD Week of Giving 2026',
   org: 'Phi Alpha Delta Law Fraternity, International',
   goalCents: 5_000_000, // $50,000 — update after Step 1 in the plan doc
   // Fallbacks are real PAD pages so the app never crashes/dead-links when
@@ -16,9 +16,10 @@ export const campaign = {
   // once this campaign's fund id is created (see README + plan doc Step 1).
   donateUrl: import.meta.env.VITE_PAD_DONATE_URL || 'https://www.pad.org/donations/donate.asp?id=20711',
   joinUrl: import.meta.env.VITE_PAD_JOIN_URL || 'https://www.pad.org/general/register_start.asp',
-  // ISO timestamp for the countdown, e.g. '2026-11-08T00:00:00-05:00'. The
-  // countdown stays hidden until this is set; never ship a guessed date.
-  dayOfGivingDate: null as string | null,
+  // Week of Giving runs from Founders' Day (Nov 8) through the end of Nov 16.
+  // The hero counts down to the start, then to the end. null hides it.
+  dayOfGivingDate: '2026-11-08T00:00:00-05:00' as string | null,
+  dayOfGivingEnd: '2026-11-17T00:00:00-05:00',
   // 25-1000 match PAD's donate.asp preset buttons exactly. 2500 and 10000
   // go through PAD's custom-amount field instead (not a preset there, but
   // still one-time-or-monthly on their secure form).

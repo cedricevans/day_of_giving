@@ -44,7 +44,7 @@ export function SiteHeader() {
           />
           <span className="leading-tight">
             <span className="block text-sm font-bold uppercase tracking-[0.25em] text-white">Phi Alpha Delta</span>
-            <span className="block text-[10px] uppercase tracking-[0.3em] text-pad-gold-300/80">Day of Giving 2026</span>
+            <span className="block text-[10px] uppercase tracking-[0.3em] text-pad-gold-300/80">Week of Giving 2026</span>
           </span>
         </a>
 
