@@ -33,14 +33,18 @@ dedicated project wasn't an option. Every app in that project gets its own
 schema (never `public`); `pad` is this one's.
 
 The schema, all 4 tables, and RLS policies already exist there (applied via
-`supabase/migrations/0001_init.sql`). **One manual step is still required
-and can only be done in the dashboard, not the CLI** (project settings
-aren't reachable from a CLI token outside the project's own org):
+`supabase/migrations/0001_init.sql`).
 
-1. Go to the Supabase dashboard → **KustomGroupWebApps** project → Project
-   Settings → API → **Exposed schemas** → add `pad` to the list → Save.
-   Until this is done, every request from this app gets a 406
-   `Invalid schema: pad` error.
+1. `pad` must be in the API's exposed schemas. On this project that list
+   comes from an in-database setting that overrides the dashboard field:
+   `pgrst.db_schemas` on role `authenticator`. Check it with
+   `select unnest(rolconfig) from pg_roles where rolname = 'authenticator';`.
+   As of 2026-09-30 it is `public, becoming, pad`. If `pad` is missing,
+   every request gets a 406 `Invalid schema: pad`. To change it, append to
+   the list (never replace it, other apps depend on their entries):
+   `alter role authenticator set pgrst.db_schemas = 'public, becoming, pad'; notify pgrst, 'reload config';`
+   Expect a few minutes of 404 "not in the schema cache" errors afterward
+   while the API reloads. That clears on its own.
 2. Copy `.env.example` to `.env` and fill in:
    - `VITE_SUPABASE_URL=https://qwhdeenasiollfyftdbb.supabase.co`
    - `VITE_SUPABASE_ANON_KEY` — the project's anon/publishable key (Project
@@ -151,9 +155,7 @@ can't be skipped by calling the API directly:
 
 ## What's not live yet
 
-- The `pad` schema isn't exposed to the API yet — see Setup step 2. Until
-  that dashboard setting is saved, tracking/leads/`/admin` all fail with a
-  406 error (logged to console, never shown to visitors — the landing page
-  itself still works, buttons just link straight to pad.org).
-- This code has not been deployed anywhere (Vercel, Netlify, etc.) or
-  connected to a domain.
+- The `pad` schema was exposed on 2026-09-30, and the Wall, Scoreboard,
+  polls, and tracking were tested end to end against the live database.
+- No deploy config lives in this repo. Confirm where the site is hosted
+  and whether it deploys from `main` before assuming a push is live.
