@@ -168,6 +168,8 @@ export function Scoreboard() {
               <ChapterInput label="Repping a chapter?" />
               <a
                 href={withTracking(campaign.donateUrl, { utm_campaign: 'scoreboard' })}
+                target="_blank"
+                rel="noopener"
                 onClick={() => logEvent('donate_click', { placement: 'scoreboard' })}
                 className="btn-gold mt-3 block rounded-full py-4 text-center text-lg font-extrabold uppercase tracking-wider transition-transform hover:scale-[1.02] active:scale-95"
               >

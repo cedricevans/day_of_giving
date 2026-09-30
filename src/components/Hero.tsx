@@ -84,6 +84,8 @@ export function Hero() {
         <motion.div custom={4} variants={rise} initial="hidden" animate="show" className="mt-10 flex flex-col gap-4 sm:flex-row">
           <a
             href={withTracking(campaign.donateUrl, { utm_campaign: 'hero' })}
+            target="_blank"
+            rel="noopener"
             onClick={() => logEvent('donate_click', { placement: 'hero' })}
             className="btn-gold rounded-full px-12 py-5 text-center text-lg font-extrabold uppercase tracking-wider transition-transform hover:scale-105 active:scale-95"
           >
@@ -91,6 +93,8 @@ export function Hero() {
           </a>
           <a
             href={withTracking(campaign.joinUrl, { utm_campaign: 'hero' })}
+            target="_blank"
+            rel="noopener"
             onClick={() => logEvent('join_click', { placement: 'hero' })}
             className="rounded-full border-2 border-white/25 bg-white/5 px-10 py-5 text-center text-lg font-semibold text-white backdrop-blur-sm transition-colors hover:border-pad-gold-400 hover:text-pad-gold-300"
           >

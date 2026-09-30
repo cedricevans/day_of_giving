@@ -56,6 +56,8 @@ export function GivingTiers() {
                 >
                   <a
                     href={withTracking(campaign.donateUrl, { utm_campaign: `tier_${amount}` })}
+                    target="_blank"
+                    rel="noopener"
                     onClick={() => logEvent('donate_click', { placement: 'tiers', amount })}
                     className={`flex h-full flex-col rounded-[calc(1.5rem-1.5px)] p-6 md:p-8 ${
                       isFeatured ? 'bg-gradient-to-br from-pad-purple-700 to-pad-purple-900' : 'bg-pad-purple-900/90 backdrop-blur'

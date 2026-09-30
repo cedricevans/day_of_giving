@@ -63,6 +63,8 @@ export function SiteHeader() {
 
         <a
           href={withTracking(campaign.donateUrl, { utm_campaign: 'header' })}
+          target="_blank"
+          rel="noopener"
           onClick={() => logEvent('donate_click', { placement: 'header' })}
           className="btn-gold hidden rounded-full px-6 py-2.5 text-sm font-extrabold uppercase tracking-wider transition-transform hover:scale-105 active:scale-95 sm:inline-block"
         >

@@ -25,6 +25,9 @@ export function LeadCapture() {
     const url = withTracking(target === 'donate' ? campaign.donateUrl : campaign.joinUrl, {
       utm_campaign: 'lead_capture',
     })
+    // Open synchronously inside the click so popup blockers allow it; this
+    // page stays open, so the lead save below still completes.
+    window.open(url, '_blank', 'noopener')
 
     if (email) {
       setStatus('saving')
@@ -33,8 +36,6 @@ export function LeadCapture() {
     } else {
       await logEvent(target === 'donate' ? 'donate_click' : 'join_click', { placement: 'lead_capture', skipped_email: true })
     }
-
-    window.location.href = url
   }
 
   return (

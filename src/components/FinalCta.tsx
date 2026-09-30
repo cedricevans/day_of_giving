@@ -25,6 +25,8 @@ export function FinalCta() {
         </p>
         <a
           href={withTracking(campaign.donateUrl, { utm_campaign: 'final_cta' })}
+          target="_blank"
+          rel="noopener"
           onClick={() => logEvent('donate_click', { placement: 'final_cta' })}
           className="btn-gold mt-10 inline-block rounded-full px-14 py-6 text-xl font-extrabold uppercase tracking-wider transition-transform hover:scale-105 active:scale-95"
         >
