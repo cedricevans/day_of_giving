@@ -147,10 +147,15 @@ function Composer({ onPost }: { onPost: ReturnType<typeof useWall>['post'] }) {
 function Poll({ poll, onVote }: { poll: PollRow; onVote: (option: number) => void }) {
   const voted = poll.my_vote !== null
   return (
-    <div className="rounded-[1.5rem] bg-pad-purple-900 p-5 text-white">
-      <p className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-pad-gold-300">Quick poll</p>
-      <p className="mt-2 font-[family-name:var(--font-display)] text-lg font-black leading-snug">{poll.question}</p>
-      <div className="mt-3 space-y-1.5">
+    <div className="rounded-[2rem] bg-pad-purple-900 p-6 text-white sm:p-8">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <p className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-pad-gold-300">Quick poll</p>
+        <p className="text-xs text-purple-100/50">
+          {voted ? `${poll.total.toLocaleString()} ${poll.total === 1 ? 'vote' : 'votes'}. Tap another to change yours.` : 'Tap to vote and see results.'}
+        </p>
+      </div>
+      <p className="mt-2 font-[family-name:var(--font-display)] text-xl font-black leading-snug sm:text-2xl">{poll.question}</p>
+      <div className="mt-5 grid gap-2 sm:grid-cols-2">
         {poll.options.map((opt, i) => {
           const pct = poll.total ? Math.round((poll.counts[i] / poll.total) * 100) : 0
           const mine = poll.my_vote === i
@@ -159,7 +164,7 @@ function Poll({ poll, onVote }: { poll: PollRow; onVote: (option: number) => voi
               key={opt}
               onClick={() => onVote(i)}
               aria-pressed={mine}
-              className={`relative w-full overflow-hidden rounded-lg px-3 py-1.5 text-left text-sm font-bold ring-1 transition-colors ${
+              className={`relative w-full overflow-hidden rounded-xl px-4 py-2.5 text-left text-sm font-bold ring-1 transition-colors ${
                 mine ? 'ring-pad-gold-400' : 'ring-white/15 hover:ring-white/40'
               }`}
             >
@@ -180,9 +185,6 @@ function Poll({ poll, onVote }: { poll: PollRow; onVote: (option: number) => voi
           )
         })}
       </div>
-      <p className="mt-3 text-xs text-purple-100/50">
-        {voted ? `${poll.total.toLocaleString()} ${poll.total === 1 ? 'vote' : 'votes'}. Tap another to change yours.` : 'Tap to vote and see results.'}
-      </p>
     </div>
   )
 }
@@ -262,6 +264,27 @@ function PostCard({ post, featured = false, onReact }: { post: WallPost; feature
 
 const wallPoints = ['Posts go live instantly', 'Tag your chapter to climb the board', 'React to the stories that move you']
 
+const invites = [
+  { title: 'Shout out your chapter', body: 'Tag your chapter and help it climb the Chapter Challenge.' },
+  { title: 'Share a P.A.D. memory', body: 'Initiation, moot court, a mentor who changed everything.' },
+]
+
+function InviteTile({ title, body }: { title: string; body: string }) {
+  return (
+    <a
+      href="#wall-composer"
+      className="group flex flex-col justify-between rounded-[1.5rem] border-2 border-dashed border-pad-purple-700/20 p-5 transition-colors hover:border-pad-gold-500 hover:bg-white/60"
+    >
+      <div>
+        <p className="text-[10px] font-extrabold uppercase tracking-[0.25em] text-pad-gold-600">Your turn</p>
+        <p className="mt-2 text-lg font-bold leading-snug text-pad-purple-950">{title}</p>
+        <p className="mt-1 text-sm text-pad-purple-800/70">{body}</p>
+      </div>
+      <p className="mt-4 text-sm font-bold text-pad-purple-900 transition-transform group-hover:translate-x-1">Add your voice &rarr;</p>
+    </a>
+  )
+}
+
 function EmptyWall() {
   return (
     <div className="relative overflow-hidden rounded-[2rem] border-2 border-dashed border-pad-purple-700/20 bg-white/60 p-8 text-center sm:p-12">
@@ -319,13 +342,12 @@ export function CommunityWall() {
 
         {isSupabaseConfigured ? (
           <div className="mt-12 grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
-            <aside id="wall-composer" className="scroll-mt-24 space-y-5 lg:sticky lg:top-24 lg:col-start-2 lg:row-start-1">
+            <aside id="wall-composer" className="scroll-mt-24 lg:sticky lg:top-24 lg:col-start-2 lg:row-start-1">
               <Composer onPost={post} />
-              {pollList.length > 0 && <div className="hidden space-y-5 lg:block">{pollList}</div>}
             </aside>
 
-            <div className="lg:col-start-1 lg:row-start-1">
-              <div className="mb-5 flex items-center gap-2.5 text-xs font-extrabold uppercase tracking-[0.25em] text-pad-purple-700/70">
+            <div className="space-y-4 lg:col-start-1 lg:row-start-1">
+              <div className="flex items-center gap-2.5 text-xs font-extrabold uppercase tracking-[0.25em] text-pad-purple-700/70">
                 <span className="relative flex h-2 w-2">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-pad-gold-500 opacity-75" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-pad-gold-500" />
@@ -334,36 +356,37 @@ export function CommunityWall() {
               </div>
 
               {featured ? (
-                <>
-                  <AnimatePresence initial={false} mode="popLayout">
-                    <PostCard key={featured.id} post={featured} featured onReact={(e) => react(featured.id, e)} />
-                  </AnimatePresence>
-                  {rest.length > 0 && (
-                    <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                      <AnimatePresence initial={false}>
-                        {rest.map((p) => (
-                          <PostCard key={p.id} post={p} onReact={(e) => react(p.id, e)} />
-                        ))}
-                      </AnimatePresence>
-                    </div>
-                  )}
-                  {hasMore && (
-                    <div className="mt-6 text-center">
-                      <button
-                        onClick={loadMore}
-                        className="rounded-full border-2 border-pad-purple-700/20 px-8 py-3 font-semibold text-pad-purple-900 transition-colors hover:border-pad-purple-700"
-                      >
-                        Load more
-                      </button>
-                    </div>
-                  )}
-                </>
+                <AnimatePresence initial={false} mode="popLayout">
+                  <PostCard key={featured.id} post={featured} featured onReact={(e) => react(featured.id, e)} />
+                </AnimatePresence>
               ) : (
                 loaded && <EmptyWall />
               )}
-            </div>
 
-            {pollList.length > 0 && <div className="space-y-5 lg:hidden">{pollList}</div>}
+              {pollList}
+
+              {featured && (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <AnimatePresence initial={false}>
+                    {rest.map((p) => (
+                      <PostCard key={p.id} post={p} onReact={(e) => react(p.id, e)} />
+                    ))}
+                  </AnimatePresence>
+                  {rest.length < 2 && invites.slice(0, 2 - rest.length).map((t) => <InviteTile key={t.title} {...t} />)}
+                </div>
+              )}
+
+              {hasMore && (
+                <div className="pt-2 text-center">
+                  <button
+                    onClick={loadMore}
+                    className="rounded-full border-2 border-pad-purple-700/20 px-8 py-3 font-semibold text-pad-purple-900 transition-colors hover:border-pad-purple-700"
+                  >
+                    Load more
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <p className="mt-12 rounded-3xl bg-white p-8 text-center text-pad-purple-700/70">The Wall is warming up. Check back soon.</p>
