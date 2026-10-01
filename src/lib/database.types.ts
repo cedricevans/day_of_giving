@@ -22,6 +22,8 @@ export interface SupporterMapRow {
   few: boolean
   total_us: number
   total_intl: number
+  /** At least one Give click from this state, even when counts are hidden. Added in 0005. */
+  has_give_click?: boolean
 }
 
 export type WallKind = 'why_i_give' | 'shout_out' | 'memory'

@@ -6,6 +6,7 @@ import { Audiences } from '../components/Audiences'
 import { Heritage } from '../components/Heritage'
 import { GivingTiers } from '../components/GivingTiers'
 import { Scoreboard } from '../components/Scoreboard'
+import { SupporterMap } from '../components/SupporterMap'
 import { CommunityWall } from '../components/CommunityWall'
 import { PhotoWall } from '../components/PhotoWall'
 import { LeadCapture } from '../components/LeadCapture'
@@ -19,6 +20,7 @@ export function LandingPage() {
       <SiteHeader />
       <Hero />
       <Scoreboard />
+      <SupporterMap />
       <ValuesMarquee />
       <CommunityWall />
       <GivingTiers />

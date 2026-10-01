@@ -63,6 +63,7 @@ function demoData(): SupporterMapData {
         few: n < 3,
         total_us: totalUs,
         total_intl: 23,
+        has_give_click: n % 3 !== 0,
       },
     ]),
   )

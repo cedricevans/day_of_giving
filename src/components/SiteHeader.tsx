@@ -5,6 +5,7 @@ import { logEvent } from '../lib/tracking'
 
 const links = [
   { href: '#scoreboard', label: 'Scoreboard' },
+  { href: '#map', label: 'Map' },
   { href: '#wall', label: 'The Wall' },
   { href: '#give-tiers', label: 'Give' },
   { href: '#heritage', label: 'Heritage' },
@@ -61,15 +62,26 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <a
-          href={withTracking(campaign.donateUrl, { utm_campaign: 'header' })}
-          target="_blank"
-          rel="noopener"
-          onClick={() => logEvent('donate_click', { placement: 'header' })}
-          className="btn-gold hidden rounded-full px-6 py-2.5 text-sm font-extrabold uppercase tracking-wider transition-transform hover:scale-105 active:scale-95 sm:inline-block"
-        >
-          Give Now
-        </a>
+        <div className="hidden items-center gap-2.5 sm:flex">
+          <a
+            href={withTracking(campaign.joinUrl, { utm_campaign: 'header' })}
+            target="_blank"
+            rel="noopener"
+            onClick={() => logEvent('join_click', { placement: 'header' })}
+            className="rounded-full border-2 border-white/25 px-5 py-2 text-sm font-bold uppercase tracking-wider text-white transition-colors hover:border-pad-gold-400 hover:text-pad-gold-300"
+          >
+            Join
+          </a>
+          <a
+            href={withTracking(campaign.donateUrl, { utm_campaign: 'header' })}
+            target="_blank"
+            rel="noopener"
+            onClick={() => logEvent('donate_click', { placement: 'header' })}
+            className="btn-gold rounded-full px-6 py-2.5 text-sm font-extrabold uppercase tracking-wider transition-transform hover:scale-105 active:scale-95"
+          >
+            Give Now
+          </a>
+        </div>
       </div>
     </header>
   )

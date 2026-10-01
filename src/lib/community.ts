@@ -26,7 +26,7 @@ export function friendlyError(err: { message?: string } | null | undefined) {
 }
 
 /** Runs `load` now, every REFRESH_MS while the tab is visible, and on return to the tab. */
-function usePolling(load: () => void) {
+export function usePolling(load: () => void) {
   const saved = useRef(load)
   useLayoutEffect(() => {
     saved.current = load
