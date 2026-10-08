@@ -147,15 +147,15 @@ function Composer({ onPost }: { onPost: ReturnType<typeof useWall>['post'] }) {
 function Poll({ poll, onVote }: { poll: PollRow; onVote: (option: number) => void }) {
   const voted = poll.my_vote !== null
   return (
-    <div className="rounded-3xl bg-pad-purple-900 p-6 text-white">
+    <div className="rounded-3xl bg-pad-purple-900 p-6 text-white sm:p-8">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <p className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-pad-gold-300">Quick poll</p>
         <p className="text-xs text-purple-100/50">
           {voted ? `${poll.total.toLocaleString()} ${poll.total === 1 ? 'vote' : 'votes'}. Tap another to change yours.` : 'Tap to vote and see results.'}
         </p>
       </div>
-      <p className="mt-2 font-[family-name:var(--font-display)] text-xl font-black leading-snug">{poll.question}</p>
-      <div className="mt-4 grid gap-1.5">
+      <p className="mt-2 font-[family-name:var(--font-display)] text-xl font-black leading-snug sm:text-2xl">{poll.question}</p>
+      <div className="mt-5 grid grid-cols-2 gap-2 lg:grid-cols-4">
         {poll.options.map((opt, i) => {
           const pct = poll.total ? Math.round((poll.counts[i] / poll.total) * 100) : 0
           const mine = poll.my_vote === i
@@ -353,7 +353,7 @@ export function CommunityWall() {
             eyebrow="The Wall"
             title={
               <>
-                This is <span className="italic text-pad-gold-600">our</span> week. Say it loud.
+                This is <span className="mr-[0.12em] italic text-pad-gold-600">our</span> week. Say it loud.
               </>
             }
             description="Tell us why you give, shout out your chapter, or share a P.A.D. memory."
@@ -372,12 +372,12 @@ export function CommunityWall() {
 
         {isSupabaseConfigured ? (
           <div className="mt-12 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-8">
-            <aside id="wall-composer" className="scroll-mt-24 lg:col-start-2 lg:row-start-1">
+            <aside id="wall-composer" className="scroll-mt-24 lg:sticky lg:top-24 lg:col-start-2 lg:row-start-1">
               <Composer onPost={post} />
             </aside>
 
             {/* Fixed-height feed: the section stays the same size however many posts come in. */}
-            <div className="space-y-4 lg:col-start-1 lg:row-span-2 lg:row-start-1">
+            <div className="space-y-4 lg:col-start-1 lg:row-start-1">
               <div className="flex items-center gap-2.5 text-xs font-extrabold uppercase tracking-[0.25em] text-pad-purple-700/70">
                 <span className="relative flex h-2 w-2">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-pad-gold-500 opacity-75" />
@@ -447,7 +447,7 @@ export function CommunityWall() {
             </div>
 
             {polls.length > 0 && (
-              <div className="space-y-4 lg:col-start-2 lg:row-start-2">
+              <div className="space-y-4 lg:col-span-2">
                 {polls.map((p) => (
                   <Poll key={p.id} poll={p} onVote={(i) => vote(p.id, i)} />
                 ))}
