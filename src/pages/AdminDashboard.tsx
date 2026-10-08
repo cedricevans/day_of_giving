@@ -85,7 +85,7 @@ export function AdminDashboard() {
         </div>
 
         <nav className="mt-8 flex gap-1 overflow-x-auto border-b border-pad-purple-700/10">
-          {(['overview', 'locations', 'leads', 'donations', 'submissions', 'community'] as const).map((t) => (
+          {(['locations', 'leads', 'donations', 'submissions', 'overview', 'community'] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
