@@ -85,9 +85,10 @@ export function SupporterMap() {
   const toggle = (code: string) => setSelected((cur) => (cur === code ? null : code))
 
   return (
-    <section id="map" className="relative overflow-hidden bg-pad-purple-950 px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_0%,rgba(94,59,163,0.45),transparent_60%)]" />
-      <div className="relative mx-auto max-w-6xl">
+    <section id="map" className="relative bg-pad-cream px-4 pb-24 pt-4 sm:px-6 lg:px-8 lg:pb-32">
+      <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[2.5rem] bg-pad-purple-950 px-4 py-14 sm:px-10 lg:py-20">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_80%_0%,rgba(94,59,163,0.45),transparent_60%)]" />
+        <div className="relative">
         <SectionHeading
           eyebrow="Giving across the country"
           tone="dark"
@@ -187,6 +188,7 @@ export function SupporterMap() {
           themselves are completed on pad.org.
           {data?.isDemo ? ' Showing sample data.' : ''}
         </p>
+        </div>
       </div>
     </section>
   )

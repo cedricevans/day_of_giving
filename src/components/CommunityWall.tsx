@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { usePolls, useWall } from '../lib/community'
+import { usePolls, useScoreboard, useWall } from '../lib/community'
 import { isSupabaseConfigured } from '../lib/supabase'
 import { useChapter } from '../lib/visitor'
 import type { PollRow, WallEmoji, WallKind, WallPost } from '../lib/database.types'
@@ -147,15 +147,15 @@ function Composer({ onPost }: { onPost: ReturnType<typeof useWall>['post'] }) {
 function Poll({ poll, onVote }: { poll: PollRow; onVote: (option: number) => void }) {
   const voted = poll.my_vote !== null
   return (
-    <div className="rounded-[2rem] bg-pad-purple-900 p-6 text-white sm:p-8">
+    <div className="rounded-3xl bg-pad-purple-900 p-6 text-white">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <p className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-pad-gold-300">Quick poll</p>
         <p className="text-xs text-purple-100/50">
           {voted ? `${poll.total.toLocaleString()} ${poll.total === 1 ? 'vote' : 'votes'}. Tap another to change yours.` : 'Tap to vote and see results.'}
         </p>
       </div>
-      <p className="mt-2 font-[family-name:var(--font-display)] text-xl font-black leading-snug sm:text-2xl">{poll.question}</p>
-      <div className="mt-5 grid gap-2 sm:grid-cols-2">
+      <p className="mt-2 font-[family-name:var(--font-display)] text-xl font-black leading-snug">{poll.question}</p>
+      <div className="mt-4 grid gap-1.5">
         {poll.options.map((opt, i) => {
           const pct = poll.total ? Math.round((poll.counts[i] / poll.total) * 100) : 0
           const mine = poll.my_vote === i
@@ -164,7 +164,7 @@ function Poll({ poll, onVote }: { poll: PollRow; onVote: (option: number) => voi
               key={opt}
               onClick={() => onVote(i)}
               aria-pressed={mine}
-              className={`relative w-full overflow-hidden rounded-xl px-4 py-2.5 text-left text-sm font-bold ring-1 transition-colors ${
+              className={`relative w-full overflow-hidden rounded-xl px-3.5 py-2 text-left text-sm font-bold ring-1 transition-colors ${
                 mine ? 'ring-pad-gold-400' : 'ring-white/15 hover:ring-white/40'
               }`}
             >
@@ -262,28 +262,56 @@ function PostCard({ post, featured = false, onReact }: { post: WallPost; feature
   )
 }
 
-const wallPoints = ['Posts go live instantly', 'Tag your chapter to climb the board', 'React to the stories that move you']
+const kindDot: Record<WallKind, string> = {
+  why_i_give: 'bg-pad-purple-900',
+  shout_out: 'bg-pad-gold-500',
+  memory: 'bg-pad-purple-600/40',
+}
 
-const invites = [
-  { title: 'Shout out your chapter', body: 'Tag your chapter and help it climb the Chapter Challenge.' },
-  { title: 'Share a P.A.D. memory', body: 'Initiation, moot court, a mentor who changed everything.' },
-]
-
-function InviteTile({ title, body }: { title: string; body: string }) {
+function PostRow({ post, onReact }: { post: WallPost; onReact: (e: WallEmoji) => void }) {
   return (
-    <a
-      href="#wall-composer"
-      className="group flex flex-col justify-between rounded-[1.5rem] border-2 border-dashed border-pad-purple-700/20 p-5 transition-colors hover:border-pad-gold-500 hover:bg-white/60"
-    >
-      <div>
-        <p className="text-[10px] font-extrabold uppercase tracking-[0.25em] text-pad-gold-600">Your turn</p>
-        <p className="mt-2 text-lg font-bold leading-snug text-pad-purple-950">{title}</p>
-        <p className="mt-1 text-sm text-pad-purple-800/70">{body}</p>
+    <article className="flex gap-3 px-4 py-3.5 sm:px-5">
+      <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${kindDot[post.kind]}`} aria-hidden="true" />
+      <div className="min-w-0 flex-1">
+        <p className="text-xs text-pad-purple-800/70">
+          <span className="font-bold text-pad-purple-950">{post.display_name || 'A P.A.D. supporter'}</span>
+          {post.chapter && <span> · {post.chapter}</span>}
+          <span> · {kindLabel[post.kind]} · {timeAgo(post.created_at)}</span>
+        </p>
+        <p className="mt-1 whitespace-pre-line break-words text-[15px] font-medium leading-snug text-pad-purple-950">{post.message}</p>
+        <div className="mt-2 flex flex-wrap gap-1">
+          {emojis.map((e) => {
+            const count = post.reactions[e.key] ?? 0
+            const on = post.mine.includes(e.key)
+            return (
+              <button
+                key={e.key}
+                onClick={() => onReact(e.key)}
+                aria-pressed={on}
+                aria-label={`${e.label}${count ? `, ${count}` : ''}`}
+                className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold transition-transform active:scale-90 ${
+                  on ? 'bg-pad-purple-900 text-white' : 'bg-pad-purple-950/5 hover:bg-pad-purple-950/10'
+                }`}
+              >
+                <span aria-hidden="true">{e.glyph}</span>
+                {count > 0 && <span className="tabular-nums">{count}</span>}
+              </button>
+            )
+          })}
+        </div>
       </div>
-      <p className="mt-4 text-sm font-bold text-pad-purple-900 transition-transform group-hover:translate-x-1">Add your voice &rarr;</p>
-    </a>
+    </article>
   )
 }
+
+const filters: { value: WallKind | 'all'; label: string }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'why_i_give', label: 'Why I give' },
+  { value: 'shout_out', label: 'Shout-outs' },
+  { value: 'memory', label: 'Memories' },
+]
+
+const wallPoints = ['Posts go live instantly', 'Tag your chapter to climb the board', 'React to the stories that move you']
 
 function EmptyWall() {
   return (
@@ -311,9 +339,11 @@ function EmptyWall() {
 export function CommunityWall() {
   const { posts, loaded, hasMore, loadMore, post, react } = useWall()
   const { polls, vote } = usePolls()
+  const { score } = useScoreboard()
+  const [filter, setFilter] = useState<WallKind | 'all'>('all')
   const [featured, ...rest] = posts
-
-  const pollList = polls.map((p) => <Poll key={p.id} poll={p} onVote={(i) => vote(p.id, i)} />)
+  const shown = filter === 'all' ? rest : rest.filter((p) => p.kind === filter)
+  const total = Math.max(score?.wall_posts ?? 0, posts.length)
 
   return (
     <section id="wall" className="relative overflow-hidden bg-pad-cream px-6 py-24 lg:px-8 lg:py-32">
@@ -341,18 +371,20 @@ export function CommunityWall() {
         </div>
 
         {isSupabaseConfigured ? (
-          <div className="mt-12 grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
-            <aside id="wall-composer" className="scroll-mt-24 lg:sticky lg:top-24 lg:col-start-2 lg:row-start-1">
+          <div className="mt-12 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-8">
+            <aside id="wall-composer" className="scroll-mt-24 lg:col-start-2 lg:row-start-1">
               <Composer onPost={post} />
             </aside>
 
-            <div className="space-y-4 lg:col-start-1 lg:row-start-1">
+            {/* Fixed-height feed: the section stays the same size however many posts come in. */}
+            <div className="space-y-4 lg:col-start-1 lg:row-span-2 lg:row-start-1">
               <div className="flex items-center gap-2.5 text-xs font-extrabold uppercase tracking-[0.25em] text-pad-purple-700/70">
                 <span className="relative flex h-2 w-2">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-pad-gold-500 opacity-75" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-pad-gold-500" />
                 </span>
                 Live from the community
+                {total > 0 && <span className="ml-auto tracking-normal normal-case">{total.toLocaleString()} posts</span>}
               </div>
 
               {featured ? (
@@ -363,30 +395,64 @@ export function CommunityWall() {
                 loaded && <EmptyWall />
               )}
 
-              {pollList}
-
               {featured && (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <AnimatePresence initial={false}>
-                    {rest.map((p) => (
-                      <PostCard key={p.id} post={p} onReact={(e) => react(p.id, e)} />
+                <div className="overflow-hidden rounded-3xl bg-white ring-1 ring-pad-purple-700/10">
+                  <div className="flex gap-1.5 overflow-x-auto border-b border-pad-purple-700/10 px-4 py-3 sm:px-5" role="tablist" aria-label="Filter posts">
+                    {filters.map((f) => (
+                      <button
+                        key={f.value}
+                        role="tab"
+                        aria-selected={filter === f.value}
+                        onClick={() => setFilter(f.value)}
+                        className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold transition-colors ${
+                          filter === f.value
+                            ? 'bg-pad-purple-900 text-pad-gold-300'
+                            : 'bg-pad-purple-700/5 text-pad-purple-800 hover:bg-pad-purple-700/10'
+                        }`}
+                      >
+                        {f.label}
+                      </button>
                     ))}
-                  </AnimatePresence>
-                  {rest.length < 2 && invites.slice(0, 2 - rest.length).map((t) => <InviteTile key={t.title} {...t} />)}
-                </div>
-              )}
-
-              {hasMore && (
-                <div className="pt-2 text-center">
-                  <button
-                    onClick={loadMore}
-                    className="rounded-full border-2 border-pad-purple-700/20 px-8 py-3 font-semibold text-pad-purple-900 transition-colors hover:border-pad-purple-700"
-                  >
-                    Load more
-                  </button>
+                  </div>
+                  <div className="relative">
+                    <div className="max-h-[520px] divide-y divide-pad-purple-700/10 overflow-y-auto">
+                      {shown.map((p) => (
+                        <PostRow key={p.id} post={p} onReact={(e) => react(p.id, e)} />
+                      ))}
+                      {shown.length === 0 && (
+                        <p className="px-5 py-10 text-center text-sm text-pad-purple-700/60">
+                          {rest.length === 0 ? 'New posts will appear here.' : 'No posts of this kind yet.'}{' '}
+                          <a href="#wall-composer" className="font-bold text-pad-purple-900 underline">
+                            Add yours
+                          </a>
+                        </p>
+                      )}
+                      {hasMore && (
+                        <div className="px-5 py-4 text-center">
+                          <button
+                            onClick={loadMore}
+                            className="rounded-full border-2 border-pad-purple-700/20 px-6 py-2 text-sm font-semibold text-pad-purple-900 transition-colors hover:border-pad-purple-700"
+                          >
+                            Load older posts
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    {shown.length > 4 && (
+                      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-white to-transparent" />
+                    )}
+                  </div>
                 </div>
               )}
             </div>
+
+            {polls.length > 0 && (
+              <div className="space-y-4 lg:col-start-2 lg:row-start-2">
+                {polls.map((p) => (
+                  <Poll key={p.id} poll={p} onVote={(i) => vote(p.id, i)} />
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           <p className="mt-12 rounded-3xl bg-white p-8 text-center text-pad-purple-700/70">The Wall is warming up. Check back soon.</p>

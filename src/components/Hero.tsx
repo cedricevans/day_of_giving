@@ -5,10 +5,31 @@ import { campaign, padFacts, withTracking } from '../lib/campaign'
 import { logEvent } from '../lib/tracking'
 import { Photo } from './Photo'
 import { Countdown } from './Countdown'
+import { useScoreboard } from '../lib/community'
 
 const rise = {
   hidden: { opacity: 0, y: 40 },
   show: (i: number) => ({ opacity: 1, y: 0, transition: { delay: 0.15 + i * 0.12, duration: 0.8, ease: [0.22, 1, 0.36, 1] as const } }),
+}
+
+/** Thin goal bar under the countdown. Hidden until the first gift is recorded, so launch day never shows $0. */
+function HeroProgress() {
+  const { score } = useScoreboard()
+  const raised = score?.raised_cents ?? 0
+  if (raised <= 0) return null
+  const pct = Math.min(100, (raised / campaign.goalCents) * 100)
+  const fmt = (c: number) => (c / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
+  return (
+    <a href="#scoreboard" className="mt-8 block max-w-md" aria-label="See live progress">
+      <div className="flex items-baseline justify-between text-sm">
+        <span className="font-bold text-white">{fmt(raised)} raised</span>
+        <span className="font-semibold text-pad-gold-300">of {fmt(campaign.goalCents)}</span>
+      </div>
+      <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-white/15">
+        <div className="h-full rounded-full bg-[linear-gradient(90deg,#a37f1f,#e8cd85)]" style={{ width: `${Math.max(pct, 2)}%` }} />
+      </div>
+    </a>
+  )
 }
 
 export function Hero() {
@@ -80,6 +101,8 @@ export function Hero() {
             <Countdown start={campaign.dayOfGivingDate} end={campaign.dayOfGivingEnd} />
           </motion.div>
         )}
+
+        <HeroProgress />
 
         <motion.div custom={4} variants={rise} initial="hidden" animate="show" className="mt-10 flex flex-col gap-4 sm:flex-row">
           <a

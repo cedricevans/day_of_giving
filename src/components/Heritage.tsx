@@ -37,7 +37,8 @@ export function Heritage() {
   const bigYearX = useTransform(scrollYProgress, [0, 1], ['10%', '-30%'])
 
   return (
-    <section id="heritage" ref={ref} className="grain relative overflow-hidden bg-pad-purple-900 px-6 py-24 lg:px-8 lg:py-32">
+    <section id="heritage" ref={ref} className="relative scroll-mt-16 bg-pad-cream px-4 sm:px-6 lg:px-8">
+      <div className="grain relative mx-auto max-w-6xl overflow-hidden rounded-[2.5rem] bg-pad-purple-900 px-6 py-16 sm:px-12 lg:py-24">
       <motion.p
         style={{ x: bigYearX }}
         aria-hidden="true"
@@ -87,6 +88,7 @@ export function Heritage() {
             </motion.div>
           ))}
         </div>
+      </div>
       </div>
     </section>
   )

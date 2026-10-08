@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { isSupabaseConfigured, supabase } from './supabase'
 import { getVisitorId } from './visitor'
 import type { HonorRollRow, LeaderboardRow, PollRow, StoryRow, ScoreboardRow, WallEmoji, WallKind, WallPost } from './database.types'
@@ -47,30 +47,68 @@ export function usePolling(load: () => void) {
   }, [])
 }
 
-export function useScoreboard() {
-  const [score, setScore] = useState<ScoreboardRow | null>(null)
-  const [leaders, setLeaders] = useState<LeaderboardRow[]>([])
+// One shared poll for every component that shows the score (hero bar and
+// Scoreboard), so adding a reader doesn't add requests.
+type ScoreState = { score: ScoreboardRow | null; leaders: LeaderboardRow[] }
+let scoreState: ScoreState = { score: null, leaders: [] }
+const scoreListeners = new Set<() => void>()
+let stopScorePolling: (() => void) | null = null
 
-  usePolling(async () => {
-    const [s, l] = await Promise.all([supabase.rpc('scoreboard'), supabase.rpc('chapter_leaderboard', { p_limit: 8 })])
-    if (s.error) console.warn('[community] scoreboard failed', s.error)
-    else setScore(s.data?.[0] ?? null)
-    if (l.error) console.warn('[community] leaderboard failed', l.error)
-    else setLeaders(l.data ?? [])
-  })
-
-  return { score, leaders }
+async function loadScore() {
+  const [s, l] = await Promise.all([supabase.rpc('scoreboard'), supabase.rpc('chapter_leaderboard', { p_limit: 8 })])
+  if (s.error) console.warn('[community] scoreboard failed', s.error)
+  if (l.error) console.warn('[community] leaderboard failed', l.error)
+  scoreState = {
+    score: s.error ? scoreState.score : (s.data?.[0] ?? null),
+    leaders: l.error ? scoreState.leaders : (l.data ?? []),
+  }
+  scoreListeners.forEach((fn) => fn())
 }
 
-/** Donors who consented on PAD's form to be listed. Name and chapter only. */
+function subscribeScore(fn: () => void) {
+  scoreListeners.add(fn)
+  if (!stopScorePolling && isSupabaseConfigured) {
+    void loadScore()
+    const id = setInterval(() => document.visibilityState === 'visible' && void loadScore(), REFRESH_MS)
+    const onVisible = () => document.visibilityState === 'visible' && void loadScore()
+    document.addEventListener('visibilitychange', onVisible)
+    stopScorePolling = () => {
+      clearInterval(id)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }
+  return () => {
+    scoreListeners.delete(fn)
+    if (scoreListeners.size === 0) {
+      stopScorePolling?.()
+      stopScorePolling = null
+    }
+  }
+}
+
+export function useScoreboard() {
+  return useSyncExternalStore(subscribeScore, () => scoreState)
+}
+
+/**
+ * Donors who consented on PAD's form to be listed. Name and chapter only.
+ * Refreshes every 5 minutes rather than on the 30 second timer: the list can
+ * run to hundreds of names, and re-downloading it that often wastes egress.
+ */
 export function useHonorRoll() {
   const [donors, setDonors] = useState<HonorRollRow[]>([])
 
-  usePolling(async () => {
-    const { data, error } = await supabase.rpc('donor_honor_roll', { p_limit: 300 })
-    if (error) console.warn('[community] honor roll failed', error)
-    else setDonors(data ?? [])
-  })
+  useEffect(() => {
+    if (!isSupabaseConfigured) return
+    const load = async () => {
+      const { data, error } = await supabase.rpc('donor_honor_roll', { p_limit: 500 })
+      if (error) console.warn('[community] honor roll failed', error)
+      else setDonors(data ?? [])
+    }
+    void load()
+    const id = setInterval(() => document.visibilityState === 'visible' && void load(), 5 * 60_000)
+    return () => clearInterval(id)
+  }, [])
 
   return donors
 }

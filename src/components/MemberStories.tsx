@@ -126,6 +126,29 @@ function StoryCard({ story }: { story: Story }) {
   )
 }
 
+/** Fills the row while there are only one or two stories, so the grid never looks half empty. */
+function InviteCard() {
+  return (
+    <a
+      href="/share"
+      className="group flex h-full min-h-[18rem] flex-col justify-between rounded-[1.75rem] border-2 border-dashed border-pad-gold-400/40 p-6 transition-colors hover:border-pad-gold-300 hover:bg-white/[0.03]"
+    >
+      <span className="text-xs font-bold uppercase tracking-[0.25em] text-pad-gold-300">Your story here</span>
+      <span>
+        <span className="block font-[family-name:var(--font-display)] text-3xl font-extrabold leading-tight text-white">
+          What has P.A.D. meant to you?
+        </span>
+        <span className="mt-3 block text-sm text-purple-100/70">
+          Send a 15 to 20 second video or a few sentences. Selected stories are featured here.
+        </span>
+      </span>
+      <span className="mt-6 inline-flex w-fit rounded-full bg-pad-gold-400 px-5 py-2.5 text-sm font-extrabold text-pad-purple-950 transition-transform group-hover:scale-105">
+        Share your story
+      </span>
+    </a>
+  )
+}
+
 /**
  * Submissions an admin has switched to "On site". Hidden until there is at
  * least one. Shows posters only; a video downloads when someone taps play.
@@ -138,9 +161,10 @@ export function MemberStories() {
   const visible = showAll ? stories : stories.slice(0, FIRST_PAGE)
 
   return (
-    <section id="stories" className="relative overflow-hidden bg-pad-purple-950 px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_85%_0%,rgba(232,205,133,0.18),transparent_55%)]" />
-      <div className="relative mx-auto max-w-6xl">
+    <section id="stories" className="relative scroll-mt-16 bg-pad-cream px-4 pb-24 sm:px-6 lg:px-8 lg:pb-32">
+      <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[2.5rem] bg-pad-purple-950 px-5 py-14 sm:px-10 lg:py-20">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_85%_0%,rgba(232,205,133,0.18),transparent_55%)]" />
+        <div className="relative">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <SectionHeading
             tone="dark"
@@ -152,17 +176,24 @@ export function MemberStories() {
             }
             description="In their own words: members on what the fraternity has meant to their careers, chapters and lives."
           />
-          <a
-            href="/share"
-            className="btn-gold shrink-0 rounded-full px-6 py-3 font-extrabold transition-transform hover:scale-[1.02] active:scale-95"
-          >
-            Share your story
-          </a>
+          {stories.length >= 3 && (
+            <a
+              href="/share"
+              className="btn-gold shrink-0 rounded-full px-6 py-3 font-extrabold transition-transform hover:scale-[1.02] active:scale-95"
+            >
+              Share your story
+            </a>
+          )}
         </div>
 
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {visible.map((s) => (
             <StoryCard key={s.id} story={s} />
+          ))}
+          {Array.from({ length: Math.max(0, 3 - stories.length) }, (_, i) => (
+            <div key={i} className={i > 0 ? 'hidden lg:block' : ''}>
+              <InviteCard />
+            </div>
           ))}
         </div>
 
@@ -177,6 +208,7 @@ export function MemberStories() {
             </button>
           </div>
         )}
+        </div>
       </div>
     </section>
   )
