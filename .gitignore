@@ -28,3 +28,6 @@ supabase/.temp/
 *.njsproj
 *.sln
 *.sw?
+
+# YourMembership exports hold donor PII. Import them in /admin, never commit.
+Export_*.csv

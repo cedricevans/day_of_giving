@@ -48,5 +48,40 @@ export function useAdminData() {
     await refresh()
   }
 
-  return { sessions, events, leads, donations, loading, error, refresh, addDonation }
+  /** Inserts gifts not already imported (matched on YM Transaction_ID) and returns how many were new. */
+  async function importDonations(rows: Database['pad']['Tables']['donations']['Insert'][]) {
+    const { data, error } = await supabase
+      .from('donations')
+      .upsert(rows, { onConflict: 'ym_transaction_id', ignoreDuplicates: true })
+      .select('id')
+    if (error) throw error
+    await refresh()
+    return data?.length ?? 0
+  }
+
+  async function updateDonation(id: string, patch: Database['pad']['Tables']['donations']['Update']) {
+    const { error } = await supabase.from('donations').update(patch).eq('id', id)
+    if (error) throw error
+    setDonations((prev) => prev.map((d) => (d.id === id ? { ...d, ...patch } : d)))
+  }
+
+  async function deleteDonation(id: string) {
+    const { error } = await supabase.from('donations').delete().eq('id', id)
+    if (error) throw error
+    setDonations((prev) => prev.filter((d) => d.id !== id))
+  }
+
+  return {
+    sessions,
+    events,
+    leads,
+    donations,
+    loading,
+    error,
+    refresh,
+    addDonation,
+    importDonations,
+    updateDonation,
+    deleteDonation,
+  }
 }

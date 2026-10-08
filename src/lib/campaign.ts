@@ -11,10 +11,9 @@ export const campaign = {
   name: 'PAD Week of Giving 2026',
   org: 'Phi Alpha Delta Law Fraternity, International',
   goalCents: 3_000_000, // $30,000 Week of Giving goal
-  // Fallbacks are real PAD pages so the app never crashes/dead-links when
-  // .env isn't set up yet — override with VITE_PAD_DONATE_URL / VITE_PAD_JOIN_URL
-  // once this campaign's fund id is created (see README + plan doc Step 1).
-  donateUrl: import.meta.env.VITE_PAD_DONATE_URL || 'https://www.pad.org/donations/donate.asp?id=20711',
+  // 25711 is the Week of Giving fund PAD confirmed on 2026-10-07. The env
+  // var overrides it, so keep VITE_PAD_DONATE_URL (local and Vercel) in sync.
+  donateUrl: import.meta.env.VITE_PAD_DONATE_URL || 'https://www.pad.org/donations/donate.asp?id=25711',
   joinUrl: import.meta.env.VITE_PAD_JOIN_URL || 'https://www.pad.org/general/register_start.asp',
   // Week of Giving runs from Founders' Day (Nov 8) through the end of Nov 16.
   // The hero counts down to the start, then to the end. null hides it.

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { isSupabaseConfigured, supabase } from './supabase'
 import { getVisitorId } from './visitor'
-import type { LeaderboardRow, PollRow, ScoreboardRow, WallEmoji, WallKind, WallPost } from './database.types'
+import type { HonorRollRow, LeaderboardRow, PollRow, ScoreboardRow, WallEmoji, WallKind, WallPost } from './database.types'
 
 // The Scoreboard and Wall refresh on a timer rather than a realtime channel:
 // anon has no direct table access (everything goes through pad.* functions),
@@ -60,6 +60,19 @@ export function useScoreboard() {
   })
 
   return { score, leaders }
+}
+
+/** Donors who consented on PAD's form to be listed. Name and chapter only. */
+export function useHonorRoll() {
+  const [donors, setDonors] = useState<HonorRollRow[]>([])
+
+  usePolling(async () => {
+    const { data, error } = await supabase.rpc('donor_honor_roll', { p_limit: 300 })
+    if (error) console.warn('[community] honor roll failed', error)
+    else setDonors(data ?? [])
+  })
+
+  return donors
 }
 
 const PAGE = 24

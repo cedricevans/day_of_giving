@@ -83,9 +83,14 @@ testing a real submission first.
 `dayOfGivingDate` (the Scoreboard countdown stays hidden until it's set).
 
 The Scoreboard's dollars raised and donor count come from `pad.donations`,
-which admins fill in from PAD's weekly YM export (Admin, Donations tab).
-It updates on the page within 30 seconds of a row being saved, but it is
-only as current as the latest export until the YM API is licensed.
+which admins fill by importing PAD's YM export (Admin, Donations tab,
+Import YM export). It updates on the page within 30 seconds of an import,
+but it is only as current as the latest import until the YM API is licensed.
+
+The donation link is the Week of Giving fund, `donate.asp?id=25711`
+(confirmed by PAD 2026-10-07). `VITE_PAD_DONATE_URL` overrides the code
+fallback, so it must match in `.env` **and** in Vercel (Production and
+Preview), followed by a redeploy.
 
 ### 5. Run
 
@@ -103,8 +108,17 @@ npm run dev
   interest and clicks come from, **not** confirmed donations — PAD's
   donation records don't include location unless you add it by hand.
 - **Leads** — captured name/email, CSV export
-- **Donations** — add rows from the weekly YM export (including chapter,
-  if known), CSV export
+- **Donations** — import YM's Ecommerce donation export (CSV). The file is
+  parsed in the browser and only Transaction_ID, name, email, amount,
+  date, fund, chapter (`Primary_Group`) and the two honor roll consent
+  columns are saved; card and address columns never leave the browser.
+  Re-importing is safe (matched on Transaction_ID). A preview shows funds,
+  skipped rows (declined/refunded/duplicate) and the consent values found.
+  Each gift has a Listed/Private toggle and a Remove button for refunds.
+  YM export files hold donor PII and are gitignored (`Export_*.csv`).
+- **Submissions** — testimonials and videos from `/share`, with the link
+  to give Andrew for outreach, a storage meter, Watch/Download via
+  10-minute signed URLs, Approve, and Remove video to free space
 - **Community** — hide or restore Wall posts (or everything from one
   sender), edit the blocked-words list, add or turn off quick polls, and
   paste in the official chapter list for the chapter picker
@@ -131,6 +145,39 @@ name/email capture), `donations` (manually populated). RLS: anonymous
 visitors can INSERT tracking rows and UPDATE only their own session's
 geo_* fields within 10 minutes of creation (for the async geo patch);
 only authenticated admin users can read anything or manage donations.
+
+## Honor roll and story submissions
+
+Added in `supabase/migrations/0006_ym_import_honor_roll_submissions.sql`
+(applied to the live database 2026-10-07 with `supabase db query --linked -f`).
+
+**Honor roll.** `pad.donor_honor_roll()` returns name and chapter (never
+amount or email) for gifts with `list_publicly`, which the import sets when
+either YM consent column holds anything other than blank/No/False/0. The
+section on the landing page stays hidden until the first listed donor.
+
+**Submissions (`/share`).** Built to fit the free Supabase plan (1 GB
+storage, limited egress):
+
+- The browser re-records each video to 720p MP4 (WebM on browsers that
+  can't record MP4) before upload. A 20 second phone clip goes from about
+  20 to 40 MB to about 4 MB. It takes about as long as the clip, so the
+  page says to keep it open. If the browser can't do this, the original
+  uploads if it is under 50 MB.
+- Limits enforced on the server: 25 seconds of video (30 hard stop),
+  50 MB per file (bucket limit), MP4/MOV/WebM only, 5 submissions per
+  visitor per day, and new videos refused once the bucket plus pending
+  uploads reaches 800 MB (`c_quota_bytes` in `pad.start_submission`,
+  mirrored in `SubmissionsAdmin.tsx`).
+- Upload flow: `pad.start_submission` validates and reserves a path, the
+  browser uploads to the private `pad-submissions` bucket (the storage
+  policy only accepts reserved, not yet uploaded paths, and never
+  overwrites), then `pad.finish_submission` confirms the object exists.
+- Videos are never public. Admins stream them through signed URLs, so
+  egress is only staff review. Download keepers to PAD's drive, then
+  Remove video to free space.
+- Storage objects can't be deleted with SQL (`storage.protect_delete`);
+  use the admin page or `supabase storage rm --linked --experimental ss:///pad-submissions/<path>`.
 
 ## Scoreboard, Wall, and polls
 

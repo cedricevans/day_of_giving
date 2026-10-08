@@ -4,6 +4,8 @@ import { useAuth } from '../hooks/useAuth'
 import { useAdminData } from '../hooks/useAdminData'
 import { downloadCsv } from '../lib/csv'
 import { CommunityAdmin } from './CommunityAdmin'
+import { SubmissionsAdmin } from './SubmissionsAdmin'
+import { YmImport } from './YmImport'
 
 function formatCents(cents: number) {
   return (cents / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' })
@@ -23,8 +25,11 @@ function KpiCard({ label, value, sub }: { label: string; value: string; sub?: st
 
 export function AdminDashboard() {
   const { signOut } = useAuth()
-  const { sessions, events, leads, donations, loading, error, addDonation } = useAdminData()
-  const [tab, setTab] = useState<'overview' | 'locations' | 'leads' | 'donations' | 'community'>('overview')
+  const { sessions, events, leads, donations, loading, error, addDonation, importDonations, updateDonation, deleteDonation } =
+    useAdminData()
+  const [tab, setTab] = useState<'overview' | 'locations' | 'leads' | 'donations' | 'submissions' | 'community'>(
+    'overview',
+  )
 
   const kpis = useMemo(() => {
     const donateClicks = events.filter((e) => e.event_type === 'donate_click').length
@@ -48,7 +53,7 @@ export function AdminDashboard() {
           <img src={crest} alt="" className="h-9 w-auto" />
           <div>
             <h1 className="font-semibold text-pad-purple-900">Week of Giving — Admin</h1>
-            <p className="text-xs text-pad-purple-700/50">Live click/lead tracking · donations from weekly YM export</p>
+            <p className="text-xs text-pad-purple-700/50">Live click/lead tracking · donations from the YM export</p>
           </div>
         </div>
         <button
@@ -79,8 +84,8 @@ export function AdminDashboard() {
           />
         </div>
 
-        <nav className="mt-8 flex gap-1 border-b border-pad-purple-700/10">
-          {(['overview', 'locations', 'leads', 'donations', 'community'] as const).map((t) => (
+        <nav className="mt-8 flex gap-1 overflow-x-auto border-b border-pad-purple-700/10">
+          {(['overview', 'locations', 'leads', 'donations', 'submissions', 'community'] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -99,7 +104,16 @@ export function AdminDashboard() {
           {tab === 'overview' && <RecentEvents events={events} />}
           {tab === 'locations' && <LocationsBreakdown sessions={sessions} events={events} />}
           {tab === 'leads' && <LeadsTable leads={leads} />}
-          {tab === 'donations' && <DonationsTable donations={donations} onAdd={addDonation} />}
+          {tab === 'donations' && (
+            <DonationsTable
+              donations={donations}
+              onAdd={addDonation}
+              onImport={importDonations}
+              onUpdate={updateDonation}
+              onDelete={deleteDonation}
+            />
+          )}
+          {tab === 'submissions' && <SubmissionsAdmin />}
           {tab === 'community' && <CommunityAdmin />}
         </div>
       </main>
@@ -317,11 +331,43 @@ function LeadsTable({ leads }: { leads: ReturnType<typeof useAdminData>['leads']
 function DonationsTable({
   donations,
   onAdd,
+  onImport,
+  onUpdate,
+  onDelete,
 }: {
   donations: ReturnType<typeof useAdminData>['donations']
   onAdd: ReturnType<typeof useAdminData>['addDonation']
+  onImport: ReturnType<typeof useAdminData>['importDonations']
+  onUpdate: ReturnType<typeof useAdminData>['updateDonation']
+  onDelete: ReturnType<typeof useAdminData>['deleteDonation']
 }) {
   const [showForm, setShowForm] = useState(false)
+  const [showImport, setShowImport] = useState(false)
+  const [busyId, setBusyId] = useState<string | null>(null)
+  const publicCount = donations.filter((d) => d.list_publicly).length
+
+  async function togglePublic(d: (typeof donations)[number]) {
+    setBusyId(d.id)
+    try {
+      await onUpdate(d.id, { list_publicly: !d.list_publicly })
+    } catch (err) {
+      alert(`Couldn't update: ${(err as Error).message}`)
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  async function remove(d: (typeof donations)[number]) {
+    if (!confirm(`Remove the ${formatCents(d.amount_cents)} gift from ${d.donor_name || 'this donor'}? Use this for refunds or test gifts.`)) return
+    setBusyId(d.id)
+    try {
+      await onDelete(d.id)
+    } catch (err) {
+      alert(`Couldn't remove: ${(err as Error).message}`)
+    } finally {
+      setBusyId(null)
+    }
+  }
   const [form, setForm] = useState({
     donor_name: '',
     donor_email: '',
@@ -360,9 +406,10 @@ function DonationsTable({
     <div>
       <div className="mb-3 flex items-center justify-between">
         <p className="text-sm text-pad-purple-700/60">
-          Add gifts from the weekly YourMembership export (Step 8 in the campaign plan).
+          Import the YourMembership Ecommerce export for the campaign fund. Re-importing the same or an overlapping
+          file is safe. {publicCount} of {donations.length} gifts are listed on the public honor roll.
         </p>
-        <div className="flex gap-2">
+        <div className="flex shrink-0 gap-2">
           <button
             onClick={() =>
               downloadCsv(
@@ -374,6 +421,9 @@ function DonationsTable({
                   recurring: d.is_recurring,
                   referral_source: d.referral_source ?? '',
                   chapter: d.chapter ?? '',
+                  listed_publicly: d.list_publicly,
+                  ym_transaction_id: d.ym_transaction_id ?? '',
+                  donated_at: d.donated_at ?? '',
                   created_at: d.created_at,
                 })),
               )
@@ -384,12 +434,20 @@ function DonationsTable({
           </button>
           <button
             onClick={() => setShowForm((s) => !s)}
+            className="rounded-full border border-pad-purple-700/15 px-4 py-2 text-sm font-medium text-pad-purple-700 hover:bg-white"
+          >
+            {showForm ? 'Cancel' : '+ Add one'}
+          </button>
+          <button
+            onClick={() => setShowImport((s) => !s)}
             className="rounded-full bg-pad-gold-500 px-4 py-2 text-sm font-semibold text-pad-purple-950"
           >
-            {showForm ? 'Cancel' : '+ Add donation'}
+            {showImport ? 'Close import' : 'Import YM export'}
           </button>
         </div>
       </div>
+
+      {showImport && <YmImport onImport={onImport} onDone={() => setShowImport(false)} />}
 
       {showForm && (
         <form onSubmit={handleSubmit} className="mb-4 grid grid-cols-2 gap-3 rounded-2xl border border-pad-purple-700/10 bg-white p-5 sm:grid-cols-4">
@@ -445,7 +503,7 @@ function DonationsTable({
         </form>
       )}
 
-      <div className="overflow-hidden rounded-2xl border border-pad-purple-700/10 bg-white">
+      <div className="overflow-x-auto rounded-2xl border border-pad-purple-700/10 bg-white">
         <table className="w-full text-left text-sm">
           <thead className="bg-pad-purple-700/5 text-pad-purple-700/60">
             <tr>
@@ -454,7 +512,9 @@ function DonationsTable({
               <th className="px-4 py-3 font-medium">Type</th>
               <th className="px-4 py-3 font-medium">Source</th>
               <th className="px-4 py-3 font-medium">Chapter</th>
-              <th className="px-4 py-3 font-medium">Recorded</th>
+              <th className="px-4 py-3 font-medium">Given</th>
+              <th className="px-4 py-3 font-medium">Honor roll</th>
+              <th className="px-4 py-3 font-medium" />
             </tr>
           </thead>
           <tbody>
@@ -468,13 +528,36 @@ function DonationsTable({
                 <td className="px-4 py-2.5">{d.is_recurring ? 'Monthly' : 'One-time'}</td>
                 <td className="px-4 py-2.5">{d.referral_source || '—'}</td>
                 <td className="px-4 py-2.5">{d.chapter || '—'}</td>
-                <td className="px-4 py-2.5 text-pad-purple-700/60">{new Date(d.created_at).toLocaleDateString()}</td>
+                <td className="px-4 py-2.5 text-pad-purple-700/60">
+                  {new Date(d.donated_at ?? d.created_at).toLocaleDateString()}
+                </td>
+                <td className="px-4 py-2.5">
+                  <button
+                    onClick={() => togglePublic(d)}
+                    disabled={busyId === d.id}
+                    title="Only donors who consented on PAD's form should be listed"
+                    className={`rounded-full px-3 py-1 text-xs font-semibold disabled:opacity-50 ${
+                      d.list_publicly ? 'bg-emerald-100 text-emerald-800' : 'bg-pad-purple-700/5 text-pad-purple-700/60'
+                    }`}
+                  >
+                    {d.list_publicly ? 'Listed' : 'Private'}
+                  </button>
+                </td>
+                <td className="px-4 py-2.5 text-right">
+                  <button
+                    onClick={() => remove(d)}
+                    disabled={busyId === d.id}
+                    className="text-xs font-medium text-red-600/70 hover:text-red-700 disabled:opacity-50"
+                  >
+                    Remove
+                  </button>
+                </td>
               </tr>
             ))}
             {donations.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-pad-purple-700/40">
-                  No donations recorded yet. Add them after each weekly export.
+                <td colSpan={8} className="px-4 py-8 text-center text-pad-purple-700/40">
+                  No donations recorded yet. Import the YM export to get started.
                 </td>
               </tr>
             )}
