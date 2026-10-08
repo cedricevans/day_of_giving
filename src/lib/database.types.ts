@@ -1,4 +1,4 @@
-// Hand-written to match supabase/migrations/0001_init.sql through 0006.
+// Hand-written to match supabase/migrations/0001_init.sql through 0007.
 // Regenerate with `supabase gen types typescript --linked --schema pad`
 // once schema exposure is confirmed, and replace this file with the
 // generated output.
@@ -108,10 +108,28 @@ export type SubmissionRow = {
   testimonial: string | null
   consent: boolean
   file_path: string | null
+  poster_path: string | null
   file_mime: string | null
   file_bytes: number | null
   duration_seconds: number | null
   status: SubmissionStatus
+  on_site: boolean
+  published_at: string | null
+  youtube_id: string | null
+}
+
+/** Story shown on the landing page, from pad.member_stories(). */
+export type StoryRow = {
+  id: string
+  name: string
+  chapter: string | null
+  testimonial: string | null
+  video_path: string | null
+  poster_path: string | null
+  youtube_id: string | null
+  published_at: string | null
+  /** False once the month's video egress budget is spent, or when YouTube is used. */
+  video_available: boolean
 }
 
 export interface Database {
@@ -290,8 +308,22 @@ export interface Database {
       }
       submissions: {
         Row: SubmissionRow
-        Insert: never
-        Update: { status?: SubmissionStatus }
+        Insert: {
+          visitor_id: string
+          name: string
+          email: string
+          chapter?: string | null
+          testimonial?: string | null
+          consent: boolean
+          youtube_id?: string | null
+          status?: SubmissionStatus
+        }
+        Update: {
+          status?: SubmissionStatus
+          on_site?: boolean
+          published_at?: string | null
+          youtube_id?: string | null
+        }
         Relationships: []
       }
       polls: {
@@ -356,12 +388,25 @@ export interface Database {
           p_file_bytes: number | null
           p_file_mime: string | null
           p_duration_seconds: number | null
+          p_poster_bytes?: number | null
         }
-        Returns: { id: string; file_path: string | null }[]
+        Returns: { id: string; file_path: string | null; poster_path: string | null }[]
       }
       finish_submission: {
         Args: { p_id: string; p_visitor_id: string }
         Returns: undefined
+      }
+      member_stories: {
+        Args: { p_limit?: number }
+        Returns: StoryRow[]
+      }
+      start_story_play: {
+        Args: { p_id: string; p_visitor_id: string }
+        Returns: boolean
+      }
+      story_video_egress_this_month: {
+        Args: Record<string, never>
+        Returns: number
       }
       submission_storage_bytes: {
         Args: Record<string, never>

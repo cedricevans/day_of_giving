@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { isSupabaseConfigured, supabase } from './supabase'
 import { getVisitorId } from './visitor'
-import type { HonorRollRow, LeaderboardRow, PollRow, ScoreboardRow, WallEmoji, WallKind, WallPost } from './database.types'
+import type { HonorRollRow, LeaderboardRow, PollRow, StoryRow, ScoreboardRow, WallEmoji, WallKind, WallPost } from './database.types'
 
 // The Scoreboard and Wall refresh on a timer rather than a realtime channel:
 // anon has no direct table access (everything goes through pad.* functions),
@@ -73,6 +73,94 @@ export function useHonorRoll() {
   })
 
   return donors
+}
+
+export type Story = StoryRow & { posterUrl: string | null; preview?: boolean }
+
+/**
+ * Admin preview (`/?preview` while signed in): reads pad.submissions
+ * directly, which only admins can, so stories that are not on the site yet
+ * show up with a "Preview" badge. Visitors never get here.
+ */
+async function loadPreviewStories(): Promise<(StoryRow & { preview?: boolean })[]> {
+  const { data, error } = await supabase
+    .from('submissions')
+    .select('*')
+    .neq('status', 'pending_upload')
+    .order('on_site', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(60)
+  if (error) {
+    console.warn('[community] preview stories failed', error)
+    return []
+  }
+  return (data ?? []).map((s) => {
+    const hasFile = Boolean(s.file_path) && s.status !== 'file_removed'
+    return {
+      id: s.id,
+      name: s.name,
+      chapter: s.chapter,
+      testimonial: s.testimonial,
+      video_path: hasFile ? s.file_path : null,
+      poster_path: hasFile ? s.poster_path : null,
+      youtube_id: s.youtube_id,
+      published_at: s.published_at,
+      video_available: hasFile && !s.youtube_id,
+      preview: !s.on_site,
+    }
+  })
+}
+
+/**
+ * Loaded once per visit rather than on the 30 second timer: every refresh
+ * would re-sign poster URLs, which defeats the browser cache and spends
+ * Supabase egress. Videos are signed only after pad.start_story_play logs
+ * the play against the monthly budget.
+ */
+export function useMemberStories() {
+  const [stories, setStories] = useState<Story[]>([])
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) return
+    let cancelled = false
+    ;(async () => {
+      const wantsPreview = new URLSearchParams(window.location.search).has('preview')
+      const session = wantsPreview ? (await supabase.auth.getSession()).data.session : null
+      let rows: (StoryRow & { preview?: boolean })[]
+      if (session) {
+        rows = await loadPreviewStories()
+      } else {
+        const { data, error } = await supabase.rpc('member_stories', { p_limit: 24 })
+        if (error) return console.warn('[community] stories failed', error)
+        rows = data ?? []
+      }
+      const posterPaths = rows.map((r) => r.poster_path).filter((p): p is string => Boolean(p))
+      const signed = posterPaths.length
+        ? await supabase.storage.from('pad-submissions').createSignedUrls(posterPaths, 3600)
+        : { data: [], error: null }
+      if (signed.error) console.warn('[community] poster urls failed', signed.error)
+      const urlFor = new Map((signed.data ?? []).map((s) => [s.path, s.signedUrl]))
+      if (!cancelled) setStories(rows.map((r) => ({ ...r, posterUrl: (r.poster_path && urlFor.get(r.poster_path)) || null })))
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  return stories
+}
+
+/** Returns a short-lived video URL, or null when the monthly budget is spent. */
+export async function playStory(story: Story) {
+  if (!story.video_path) return null
+  // Admin previews of hidden stories sign directly and don't count against the budget.
+  if (!story.preview) {
+    const { data: allowed, error } = await supabase.rpc('start_story_play', { p_id: story.id, p_visitor_id: getVisitorId() })
+    if (error || !allowed) return null
+  }
+  const { data, error: signError } = await supabase.storage.from('pad-submissions').createSignedUrl(story.video_path, 300)
+  if (signError) console.warn('[community] video url failed', signError)
+  return data?.signedUrl ?? null
 }
 
 const PAGE = 24

@@ -117,8 +117,11 @@ npm run dev
   Each gift has a Listed/Private toggle and a Remove button for refunds.
   YM export files hold donor PII and are gitignored (`Export_*.csv`).
 - **Submissions** — testimonials and videos from `/share`, with the link
-  to give Andrew for outreach, a storage meter, Watch/Download via
-  10-minute signed URLs, Approve, and Remove video to free space
+  to give Andrew for outreach, storage and monthly video-play meters,
+  Show on site / Hide from site, an optional YouTube link per story, an
+  "Add a story from a YouTube link" form, Watch/Download via 10-minute
+  signed URLs, and Remove video to free space. `/?preview` while signed
+  in shows hidden stories on the landing page with a "Preview" badge
 - **Community** — hide or restore Wall posts (or everything from one
   sender), edit the blocked-words list, add or turn off quick polls, and
   paste in the official chapter list for the chapter picker
@@ -178,6 +181,27 @@ storage, limited egress):
   Remove video to free space.
 - Storage objects can't be deleted with SQL (`storage.protect_delete`);
   use the admin page or `supabase storage rm --linked --experimental ss:///pad-submissions/<path>`.
+
+## Member Stories
+
+Added in `0007_member_stories.sql` and `0008_admin_youtube_stories.sql`
+(applied live 2026-10-07). Nothing appears until an admin clicks Show on
+site, and the section is hidden until at least one story is on.
+
+Supabase egress is shared by every app in the project, so video bandwidth
+is capped, not just minimized:
+
+- The page loads ~10 KB JPEG thumbnails (captured in the sender's browser at
+  upload), never video, until someone taps play. Six stories show at first.
+- Each play goes through `pad.start_story_play`, which logs the file size
+  in `pad.story_plays` and refuses once the month reaches **1.5 GB**
+  (`pad.story_video_budget_left`). Anon can only sign a video URL in the two
+  minutes after a logged play, so the Storage API can't be used to skip it.
+  When the budget is spent, cards keep their thumbnail and text and show
+  "Video coming back soon" until the 1st of the next month.
+- Stories with a YouTube link play from YouTube and cost nothing. Any public
+  video works; no access to PAD's channel is needed.
+- Stories load once per visit, not on the 30 second Scoreboard timer.
 
 ## Scoreboard, Wall, and polls
 

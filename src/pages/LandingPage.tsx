@@ -9,6 +9,7 @@ import { Scoreboard } from '../components/Scoreboard'
 import { HonorRoll } from '../components/HonorRoll'
 import { SupporterMap } from '../components/SupporterMap'
 import { CommunityWall } from '../components/CommunityWall'
+import { MemberStories } from '../components/MemberStories'
 import { PhotoWall } from '../components/PhotoWall'
 import { LeadCapture } from '../components/LeadCapture'
 import { FinalCta } from '../components/FinalCta'
@@ -25,6 +26,7 @@ export function LandingPage() {
       <SupporterMap />
       <ValuesMarquee />
       <CommunityWall />
+      <MemberStories />
       <GivingTiers />
       <Stats />
       <Audiences />

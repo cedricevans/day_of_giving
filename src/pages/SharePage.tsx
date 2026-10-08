@@ -3,7 +3,7 @@ import crest from '../assets/brand/pad-crest.png'
 import { ChapterInput } from '../components/ChapterInput'
 import { isSupabaseConfigured, supabase } from '../lib/supabase'
 import { getVisitorId, useChapter } from '../lib/visitor'
-import { ACCEPTED_TYPES, compressVideo, loadVideo, videoMime } from '../lib/videoCompress'
+import { ACCEPTED_TYPES, capturePoster, compressVideo, loadVideo, videoMime } from '../lib/videoCompress'
 
 const MAX_SECONDS = 25
 const MAX_BYTES = 50 * 1024 * 1024
@@ -39,6 +39,7 @@ export function SharePage() {
   const [consent, setConsent] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [video, setVideo] = useState<HTMLVideoElement | null>(null)
+  const [poster, setPoster] = useState<Blob | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [fileError, setFileError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -54,6 +55,7 @@ export function SharePage() {
   function clearFile() {
     setFile(null)
     setVideo(null)
+    setPoster(null)
     setPreviewUrl(null)
     if (inputRef.current) inputRef.current.value = ''
   }
@@ -73,6 +75,7 @@ export function SharePage() {
         if (inputRef.current) inputRef.current.value = ''
         return
       }
+      setPoster(await capturePoster(v))
       setFile(f)
       setVideo(v)
       setPreviewUrl(URL.createObjectURL(f))
@@ -128,6 +131,7 @@ export function SharePage() {
       p_file_bytes: upload ? upload.size : null,
       p_file_mime: upload ? mime : null,
       p_duration_seconds: upload ? duration : null,
+      p_poster_bytes: upload && poster ? poster.size : null,
     })
     const row = data?.[0]
     if (startError || !row) {
@@ -139,6 +143,13 @@ export function SharePage() {
       const { error: uploadError } = await supabase.storage
         .from('pad-submissions')
         .upload(row.file_path, upload, { contentType: mime ?? 'video/mp4' })
+      // The thumbnail is a nice-to-have; a failed one doesn't block the story.
+      if (!uploadError && poster && row.poster_path) {
+        const { error: posterError } = await supabase.storage
+          .from('pad-submissions')
+          .upload(row.poster_path, poster, { contentType: 'image/jpeg' })
+        if (posterError) console.warn('[share] poster upload failed', posterError)
+      }
       const finished = uploadError ? null : await supabase.rpc('finish_submission', { p_id: row.id, p_visitor_id: visitor })
       if (uploadError || finished?.error) {
         console.warn('[share] upload failed', uploadError ?? finished?.error)

@@ -1,6 +1,6 @@
 /**
  * Shrinks a phone video to 720p in the browser before upload, so a 20 second
- * clip lands around 5 to 7 MB instead of 40+ MB. It plays the clip through
+ * clip lands around 4 MB instead of 20 to 40 MB. It plays the clip through
  * a canvas and re-records it with MediaRecorder, so it takes roughly as long
  * as the clip itself. Audio is routed into the recording only, never to the
  * speakers.
@@ -11,7 +11,7 @@
 
 const MAX_LONG_SIDE = 1280
 const MAX_SHORT_SIDE = 720
-const VIDEO_BPS = 2_000_000
+const VIDEO_BPS = 1_500_000
 const AUDIO_BPS = 96_000
 
 // mp4 first: it opens everywhere PAD staff might edit. WebM is the fallback
@@ -58,6 +58,37 @@ export function loadVideo(file: File): Promise<HTMLVideoElement> {
       }
     }
     video.onerror = () => reject(new Error('unreadable'))
+  })
+}
+
+/**
+ * Grabs one frame as a small JPEG for the Member Stories tile, so the landing
+ * page can show a thumbnail without downloading the video. Leaves the element
+ * rewound to the start.
+ */
+export function capturePoster(video: HTMLVideoElement): Promise<Blob | null> {
+  return new Promise((resolve) => {
+    const w = video.videoWidth
+    const h = video.videoHeight
+    if (!w || !h) return resolve(null)
+    const scale = Math.min(1, 480 / Math.min(w, h))
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.round(w * scale)
+    canvas.height = Math.round(h * scale)
+    const done = (b: Blob | null) => {
+      video.onseeked = null
+      video.currentTime = 0
+      resolve(b && b.size <= 512 * 1024 ? b : null)
+    }
+    video.onseeked = () => {
+      try {
+        canvas.getContext('2d')?.drawImage(video, 0, 0, canvas.width, canvas.height)
+        canvas.toBlob(done, 'image/jpeg', 0.7)
+      } catch {
+        done(null)
+      }
+    }
+    video.currentTime = Math.min(1, video.duration / 2)
   })
 }
 
