@@ -137,7 +137,7 @@ export function SupporterMap() {
                     d={s.d}
                     role="button"
                     tabIndex={0}
-                    aria-label={`${s.name}: ${isGiving ? 'supporters giving' : isVisiting ? 'supporters visiting' : 'not lit up yet'}. Show details.`}
+                    aria-label={`${s.name}: ${isGiving ? 'giving' : isVisiting ? 'members visiting' : 'waiting to light up'}. Show details.`}
                     aria-pressed={selected === s.code}
                     onClick={() => toggle(s.code)}
                     onKeyDown={(e) => {
@@ -172,20 +172,20 @@ export function SupporterMap() {
 
           <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-semibold text-purple-100/70">
             <span className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-sm bg-pad-gold-400" /> Someone tapped Give
+              <span className="h-3 w-3 rounded-sm bg-pad-gold-400" /> Giving
             </span>
             <span className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-sm bg-pad-purple-600" /> Visiting
+              <span className="h-3 w-3 rounded-sm bg-pad-purple-600" /> Members visiting
             </span>
             <span className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-sm bg-white/10 ring-1 ring-white/20" /> Not yet
+              <span className="h-3 w-3 rounded-sm bg-white/10 ring-1 ring-white/20" /> Waiting to light up
             </span>
           </div>
         </div>
 
         <p className="mt-4 text-center text-xs leading-relaxed text-purple-100/40">
-          Locations are approximate, by state, from visitor IP address. Gold means a supporter there tapped Give; gifts
-          themselves are completed on pad.org.
+          Gold means a gift or a Give tap came from that state. Purple means members there have visited this page.
+          Visitor locations are approximate, by state, from IP address. Gifts are completed on pad.org.
           {data?.isDemo ? ' Showing sample data.' : ''}
         </p>
         </div>
@@ -214,7 +214,7 @@ function StatePopover({
   const tx = x < 0.3 ? '-12%' : x > 0.7 ? '-88%' : '-50%'
   const ty = y < 0.45 ? '18px' : 'calc(-100% - 18px)'
 
-  const status = giving ? 'Giving' : row ? 'Visiting' : 'Not lit up yet'
+  const status = giving ? 'Giving' : row ? 'Members visiting' : 'Waiting to light up'
   const statusClass = giving
     ? 'bg-pad-gold-400 text-pad-purple-950'
     : row
