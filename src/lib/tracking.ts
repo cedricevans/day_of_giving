@@ -86,11 +86,17 @@ export async function logEvent(eventType: EventType, metadata: Record<string, un
   // chapters participating before YM records chapter on the gift itself.
   const isClick = eventType === 'donate_click' || eventType === 'join_click'
   const chapter = isClick ? getChapter() : null
-  const { error } = await supabase.from('events').insert({
-    session_id: sessionId,
-    event_type: eventType,
-    metadata: isClick ? { ...metadata, visitor_id: getVisitorId(), ...(chapter ? { chapter } : {}) } : metadata,
-  })
+  const meta = isClick ? { ...metadata, visitor_id: getVisitorId(), ...(chapter ? { chapter } : {}) } : metadata
+  let { error } = await supabase.from('events').insert({ session_id: sessionId, event_type: eventType, metadata: meta })
+  // A tab can outlive its session row (e.g. after an admin clears test data),
+  // which fails the foreign key. Start a fresh session and try once more.
+  if (error?.code === '23503') {
+    sessionStorage.removeItem(SESSION_KEY)
+    sessionStorage.removeItem(GEO_DONE_KEY)
+    sessionIdPromise = null
+    const freshId = await getSessionId()
+    ;({ error } = await supabase.from('events').insert({ session_id: freshId, event_type: eventType, metadata: meta }))
+  }
   if (error) console.warn('[tracking] failed to log event', eventType, error)
 }
 
