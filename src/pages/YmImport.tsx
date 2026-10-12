@@ -60,6 +60,7 @@ export function YmImport({
           donated_at: r.donated_at,
           fund: r.fund,
           chapter: r.chapter,
+          donor_state: r.donor_state,
           is_recurring: r.is_recurring,
           list_publicly: r.list_publicly,
           referral_source: null,

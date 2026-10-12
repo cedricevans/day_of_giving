@@ -77,7 +77,7 @@ export function SupporterMap() {
   const rowFor = (code: string) => data?.byState.get(code)
   const gave = (code: string) => {
     const r = rowFor(code)
-    return Boolean(r && (r.has_give_click || (r.give_clicks ?? 0) > 0))
+    return Boolean(r && (r.has_gift || r.has_give_click || (r.give_clicks ?? 0) > 0))
   }
   const givingStates = shapes.filter((s) => gave(s.code)).length
   const visitingStates = shapes.filter((s) => rowFor(s.code)).length
@@ -98,7 +98,7 @@ export function SupporterMap() {
               Light up <span className="text-gold-gradient italic">your state.</span>
             </>
           }
-          description="Every state turns gold when a supporter there taps Give. Share the page and help fill the map."
+          description="Every state turns gold when a supporter there gives. Share the page and help fill the map."
         />
 
         <div className="mt-10 grid grid-cols-2 gap-3 sm:mx-auto sm:max-w-md">
@@ -284,7 +284,7 @@ function StatePopover({
       ) : (
         <p className="mt-3 text-sm leading-snug text-pad-purple-900/80">
           {row
-            ? `A few supporters from ${shape.name} so far${giving ? ', and someone here tapped Give' : ''}. Exact counts show once 3 or more visit.`
+            ? `${shape.name} is ${giving ? 'giving' : 'visiting'}. Exact counts show once 3 or more supporters visit.`
             : `No one from ${shape.name} yet. Be the first to light it up.`}
         </p>
       )}

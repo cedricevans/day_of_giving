@@ -24,6 +24,10 @@ export interface SupporterMapRow {
   total_intl: number
   /** At least one Give click from this state, even when counts are hidden. Added in 0005. */
   has_give_click?: boolean
+  /** Imported YM gifts from this state; null under 3. Added in 0009. */
+  gifts?: number | null
+  /** At least one imported gift from this state. Added in 0009. */
+  has_gift?: boolean
 }
 
 export type WallKind = 'why_i_give' | 'shout_out' | 'memory'
@@ -251,6 +255,7 @@ export interface Database {
           donated_at: string | null
           fund: string | null
           list_publicly: boolean
+          donor_state: string | null
         }
         Insert: {
           id?: string
@@ -268,6 +273,7 @@ export interface Database {
           donated_at?: string | null
           fund?: string | null
           list_publicly?: boolean
+          donor_state?: string | null
         }
         Update: {
           id?: string
@@ -285,6 +291,7 @@ export interface Database {
           donated_at?: string | null
           fund?: string | null
           list_publicly?: boolean
+          donor_state?: string | null
         }
         Relationships: []
       }

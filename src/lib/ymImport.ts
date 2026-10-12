@@ -1,8 +1,11 @@
 /**
  * Parses YourMembership's Ecommerce donation export in the browser and keeps
  * only what the campaign needs. Card, address and phone columns are read
- * past and never leave the admin's machine.
+ * past and never leave the admin's machine. Only the US state is kept, as a
+ * postal code, so imported gifts can light up the supporter map.
  */
+
+import { toPostal } from './usStates'
 
 const HONOR_ROLL_COLS = [
   'I_agree_to_list_my_name_on_the_honor_roll_of_donors_on_the_website.',
@@ -20,6 +23,7 @@ export type YmDonation = {
   donated_at: string | null
   fund: string | null
   chapter: string | null
+  donor_state: string | null
   is_recurring: boolean
   list_publicly: boolean
   status: string
@@ -138,6 +142,9 @@ export function parseYmExport(text: string): YmParseResult {
 
     const consents = HONOR_ROLL_COLS.map((c) => get(r, c))
     consents.forEach((v) => consentValues.add(v === '' ? '(blank)' : v))
+    const country = get(r, 'Home_Country') || get(r, 'Billing_Country')
+    const inUs = !country || /^(us|usa|united states( of america)?)$/i.test(country.replace(/\./g, ''))
+    const state = inUs ? toPostal(get(r, 'Home_State')) ?? toPostal(get(r, 'Billing_State')) : null
     const name = [get(r, 'First_Name'), get(r, 'Last_Name')].filter(Boolean).join(' ').replace(/\s+/g, ' ')
 
     rows.push({
@@ -148,6 +155,7 @@ export function parseYmExport(text: string): YmParseResult {
       donated_at: toIso(get(r, 'Date_Submitted')),
       fund: get(r, 'Fund') || get(r, 'Fund_Code') || null,
       chapter: get(r, 'Primary_Group').replace(/\s+/g, ' ').slice(0, 120) || null,
+      donor_state: state,
       is_recurring: /recur|month|schedul/i.test(get(r, 'Payment_Type')) || /recur|month/i.test(get(r, 'FundType')),
       list_publicly: consents.some(said),
       status,
