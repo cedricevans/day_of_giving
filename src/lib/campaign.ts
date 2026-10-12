@@ -19,8 +19,9 @@ export const campaign = {
   // The hero counts down to the start, then to the end. null hides it.
   dayOfGivingDate: '2026-11-08T00:00:00-05:00' as string | null,
   dayOfGivingEnd: '2026-11-17T00:00:00-05:00',
-  // PAD asked to keep Member Stories and /share hidden until the Oct 23
-  // launch. Both appear on their own once this passes.
+  // PAD asked to keep Member Stories hidden until the Oct 23 launch. It
+  // appears on its own once this passes. /share stays reachable by direct
+  // link so PAD can test submissions; Member Stories holds its only links.
   storiesLaunch: '2026-10-23T00:00:00-04:00',
   // 25-1000 match PAD's donate.asp preset buttons exactly. 2500 and 10000
   // go through PAD's custom-amount field instead (not a preset there, but
