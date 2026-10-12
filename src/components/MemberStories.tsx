@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { storiesOpen } from '../lib/campaign'
 import { playStory, useMemberStories, type Story } from '../lib/community'
 import { SectionHeading } from './SectionHeading'
 
@@ -154,6 +155,10 @@ function InviteCard() {
  * least one. Shows posters only; a video downloads when someone taps play.
  */
 export function MemberStories() {
+  return storiesOpen() ? <MemberStoriesSection /> : null
+}
+
+function MemberStoriesSection() {
   const stories = useMemberStories()
   const [showAll, setShowAll] = useState(false)
   if (stories.length === 0) return null

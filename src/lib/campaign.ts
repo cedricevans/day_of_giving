@@ -19,6 +19,9 @@ export const campaign = {
   // The hero counts down to the start, then to the end. null hides it.
   dayOfGivingDate: '2026-11-08T00:00:00-05:00' as string | null,
   dayOfGivingEnd: '2026-11-17T00:00:00-05:00',
+  // PAD asked to keep Member Stories and /share hidden until the Oct 23
+  // launch. Both appear on their own once this passes.
+  storiesLaunch: '2026-10-23T00:00:00-04:00',
   // 25-1000 match PAD's donate.asp preset buttons exactly. 2500 and 10000
   // go through PAD's custom-amount field instead (not a preset there, but
   // still one-time-or-monthly on their secure form).
@@ -36,6 +39,8 @@ export const padFacts = {
   mission:
     'Service to the student, the school, the profession, and the community.',
 }
+
+export const storiesOpen = () => Date.now() >= Date.parse(campaign.storiesLaunch)
 
 /** Appends UTM + our click-id so a visit can be matched back to a lead/session later. */
 export function withTracking(baseUrl: string, params: Record<string, string> = {}) {
