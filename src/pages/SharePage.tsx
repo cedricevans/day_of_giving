@@ -204,7 +204,8 @@ export function SharePage() {
               <p className="font-semibold">Video tips</p>
               <ul className="mt-2 list-disc space-y-1 pl-5 text-pad-purple-700/80">
                 <li>Keep it to 15 to 20 seconds. Clips longer than {MAX_SECONDS} seconds can't be accepted.</li>
-                <li>Hold your phone steady in a quiet, well lit spot. Vertical or horizontal both work.</li>
+                <li>Hold your phone horizontally (sideways), not vertically.</li>
+                <li>Keep it steady in a quiet, well lit spot.</li>
                 <li>Say your name, your chapter, and what P.A.D. means to you.</li>
                 <li>MP4, MOV or WebM. We shrink it on your device before sending, so keep this page open while it uploads.</li>
               </ul>
@@ -252,11 +253,17 @@ export function SharePage() {
                         </button>
                       )}
                     </div>
+                    {video && video.videoHeight > video.videoWidth && (
+                      <p className="mt-2 rounded-xl bg-amber-50 p-3 text-xs text-amber-900">
+                        This video looks vertical. If you can, please record it again with your phone held sideways so
+                        it can be featured. You can still send this one.
+                      </p>
+                    )}
                   </div>
                 ) : (
                   <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-pad-purple-700/20 bg-white px-4 py-8 text-center transition-colors hover:border-pad-gold-500">
                     <span className="font-semibold text-pad-purple-900">Record or choose a video</span>
-                    <span className="mt-1 text-xs text-pad-purple-700/50">Up to {MAX_SECONDS} seconds</span>
+                    <span className="mt-1 text-xs text-pad-purple-700/50">Hold your phone sideways. Up to {MAX_SECONDS} seconds.</span>
                     <input
                       ref={inputRef}
                       type="file"
