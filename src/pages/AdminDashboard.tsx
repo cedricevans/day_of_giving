@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import crest from '../assets/brand/pad-crest.png'
 import { useAuth } from '../hooks/useAuth'
 import { useAdminData } from '../hooks/useAdminData'
+import { useChapterList } from '../lib/community'
 import { downloadCsv } from '../lib/csv'
 import { CommunityAdmin } from './CommunityAdmin'
 import { SubmissionsAdmin } from './SubmissionsAdmin'
@@ -344,7 +345,51 @@ function DonationsTable({
   const [showForm, setShowForm] = useState(false)
   const [showImport, setShowImport] = useState(false)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [edit, setEdit] = useState({ donor_name: '', donor_email: '', amount: '', referral_source: '', chapter: '', is_recurring: false })
+  const officialChapters = useChapterList()
+  const chapterOptions = useMemo(
+    () =>
+      [...new Set([...officialChapters, ...donations.map((d) => d.chapter?.trim()).filter((c): c is string => !!c)])].sort(
+        (a, b) => a.localeCompare(b),
+      ),
+    [officialChapters, donations],
+  )
   const publicCount = donations.filter((d) => d.list_publicly).length
+
+  function startEdit(d: (typeof donations)[number]) {
+    setEditingId(d.id)
+    setEdit({
+      donor_name: d.donor_name ?? '',
+      donor_email: d.donor_email ?? '',
+      amount: (d.amount_cents / 100).toFixed(2),
+      referral_source: d.referral_source ?? '',
+      chapter: d.chapter ?? '',
+      is_recurring: d.is_recurring,
+    })
+  }
+
+  async function saveEdit(e: React.FormEvent, d: (typeof donations)[number]) {
+    e.preventDefault()
+    const amountCents = Math.round(parseFloat(edit.amount) * 100)
+    if (!amountCents || amountCents <= 0) return alert('Enter an amount greater than zero.')
+    setBusyId(d.id)
+    try {
+      await onUpdate(d.id, {
+        donor_name: edit.donor_name.replace(/\s+/g, ' ').trim() || null,
+        donor_email: edit.donor_email.trim().toLowerCase() || null,
+        amount_cents: amountCents,
+        referral_source: edit.referral_source.trim() || null,
+        chapter: edit.chapter.replace(/\s+/g, ' ').trim() || null,
+        is_recurring: edit.is_recurring,
+      })
+      setEditingId(null)
+    } catch (err) {
+      alert(`Couldn't save: ${(err as Error).message}`)
+    } finally {
+      setBusyId(null)
+    }
+  }
 
   async function togglePublic(d: (typeof donations)[number]) {
     setBusyId(d.id)
@@ -447,7 +492,9 @@ function DonationsTable({
         </div>
       </div>
 
-      {showImport && <YmImport onImport={onImport} onDone={() => setShowImport(false)} />}
+      {showImport && (
+        <YmImport existing={donations} onImport={onImport} onLink={onUpdate} onDone={() => setShowImport(false)} />
+      )}
 
       {showForm && (
         <form onSubmit={handleSubmit} className="mb-4 grid grid-cols-2 gap-3 rounded-2xl border border-pad-purple-700/10 bg-white p-5 sm:grid-cols-4">
@@ -518,7 +565,87 @@ function DonationsTable({
             </tr>
           </thead>
           <tbody>
-            {donations.map((d) => (
+            {donations.map((d) =>
+              editingId === d.id ? (
+                <tr key={d.id} className="border-t border-pad-purple-700/5 bg-pad-gold-500/5">
+                  <td colSpan={8} className="px-4 py-3">
+                    <form onSubmit={(e) => saveEdit(e, d)} className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                      <label className="text-xs text-pad-purple-700/60">
+                        Donor name
+                        <input
+                          value={edit.donor_name}
+                          onChange={(e) => setEdit((f) => ({ ...f, donor_name: e.target.value }))}
+                          className="mt-1 w-full rounded-lg border border-pad-purple-700/15 px-3 py-2 text-sm text-pad-purple-950"
+                        />
+                      </label>
+                      <label className="text-xs text-pad-purple-700/60">
+                        Donor email
+                        <input
+                          type="email"
+                          value={edit.donor_email}
+                          onChange={(e) => setEdit((f) => ({ ...f, donor_email: e.target.value }))}
+                          className="mt-1 w-full rounded-lg border border-pad-purple-700/15 px-3 py-2 text-sm text-pad-purple-950"
+                        />
+                      </label>
+                      <label className="text-xs text-pad-purple-700/60">
+                        Amount (USD)
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0.01"
+                          required
+                          value={edit.amount}
+                          onChange={(e) => setEdit((f) => ({ ...f, amount: e.target.value }))}
+                          className="mt-1 w-full rounded-lg border border-pad-purple-700/15 px-3 py-2 text-sm text-pad-purple-950"
+                        />
+                      </label>
+                      <label className="text-xs text-pad-purple-700/60">
+                        Referral source
+                        <input
+                          value={edit.referral_source}
+                          onChange={(e) => setEdit((f) => ({ ...f, referral_source: e.target.value }))}
+                          className="mt-1 w-full rounded-lg border border-pad-purple-700/15 px-3 py-2 text-sm text-pad-purple-950"
+                        />
+                      </label>
+                      <label className="col-span-2 text-xs text-pad-purple-700/60">
+                        Chapter
+                        <input
+                          list="donation-chapter-options"
+                          maxLength={120}
+                          placeholder="e.g. Story Chapter, Howard Law"
+                          value={edit.chapter}
+                          onChange={(e) => setEdit((f) => ({ ...f, chapter: e.target.value }))}
+                          className="mt-1 w-full rounded-lg border border-pad-purple-700/15 px-3 py-2 text-sm text-pad-purple-950"
+                        />
+                      </label>
+                      <label className="flex items-center gap-2 self-end pb-2 text-sm text-pad-purple-700/70">
+                        <input
+                          type="checkbox"
+                          checked={edit.is_recurring}
+                          onChange={(e) => setEdit((f) => ({ ...f, is_recurring: e.target.checked }))}
+                        />
+                        Recurring (monthly)
+                      </label>
+                      <div className="flex items-end justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setEditingId(null)}
+                          className="rounded-full border border-pad-purple-700/15 px-4 py-2 text-sm font-medium text-pad-purple-700"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={busyId === d.id}
+                          className="rounded-full bg-pad-purple-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                        >
+                          {busyId === d.id ? 'Saving…' : 'Save'}
+                        </button>
+                      </div>
+                    </form>
+                  </td>
+                </tr>
+              ) : (
               <tr key={d.id} className="border-t border-pad-purple-700/5">
                 <td className="px-4 py-2.5">
                   {d.donor_name || '—'}
@@ -543,7 +670,14 @@ function DonationsTable({
                     {d.list_publicly ? 'Listed' : 'Private'}
                   </button>
                 </td>
-                <td className="px-4 py-2.5 text-right">
+                <td className="whitespace-nowrap px-4 py-2.5 text-right">
+                  <button
+                    onClick={() => startEdit(d)}
+                    disabled={busyId === d.id}
+                    className="mr-3 text-xs font-medium text-pad-purple-700 hover:text-pad-purple-900 disabled:opacity-50"
+                  >
+                    Edit
+                  </button>
                   <button
                     onClick={() => remove(d)}
                     disabled={busyId === d.id}
@@ -553,7 +687,8 @@ function DonationsTable({
                   </button>
                 </td>
               </tr>
-            ))}
+              ),
+            )}
             {donations.length === 0 && (
               <tr>
                 <td colSpan={8} className="px-4 py-8 text-center text-pad-purple-700/40">
@@ -563,6 +698,11 @@ function DonationsTable({
             )}
           </tbody>
         </table>
+        <datalist id="donation-chapter-options">
+          {chapterOptions.map((c) => (
+            <option key={c} value={c} />
+          ))}
+        </datalist>
       </div>
     </div>
   )
