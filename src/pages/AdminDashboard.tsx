@@ -4,9 +4,23 @@ import { useAuth } from '../hooks/useAuth'
 import { useAdminData } from '../hooks/useAdminData'
 import { useChapterList } from '../lib/community'
 import { downloadCsv } from '../lib/csv'
+import { usStateOptions } from '../lib/usStates'
 import { CommunityAdmin } from './CommunityAdmin'
 import { SubmissionsAdmin } from './SubmissionsAdmin'
 import { YmImport } from './YmImport'
+
+function StateSelect({ value, onChange, className }: { value: string; onChange: (v: string) => void; className: string }) {
+  return (
+    <select value={value} onChange={(e) => onChange(e.target.value)} className={className}>
+      <option value="">State (lights the map)</option>
+      {usStateOptions.map(([code, name]) => (
+        <option key={code} value={code}>
+          {name}
+        </option>
+      ))}
+    </select>
+  )
+}
 
 function formatCents(cents: number) {
   return (cents / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' })
@@ -346,7 +360,7 @@ function DonationsTable({
   const [showImport, setShowImport] = useState(false)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [edit, setEdit] = useState({ donor_name: '', donor_email: '', amount: '', referral_source: '', chapter: '', is_recurring: false })
+  const [edit, setEdit] = useState({ donor_name: '', donor_email: '', amount: '', referral_source: '', chapter: '', donor_state: '', is_recurring: false })
   const officialChapters = useChapterList()
   const chapterOptions = useMemo(
     () =>
@@ -365,6 +379,7 @@ function DonationsTable({
       amount: (d.amount_cents / 100).toFixed(2),
       referral_source: d.referral_source ?? '',
       chapter: d.chapter ?? '',
+      donor_state: d.donor_state ?? '',
       is_recurring: d.is_recurring,
     })
   }
@@ -381,6 +396,7 @@ function DonationsTable({
         amount_cents: amountCents,
         referral_source: edit.referral_source.trim() || null,
         chapter: edit.chapter.replace(/\s+/g, ' ').trim() || null,
+        donor_state: edit.donor_state || null,
         is_recurring: edit.is_recurring,
       })
       setEditingId(null)
@@ -420,6 +436,7 @@ function DonationsTable({
     is_recurring: false,
     referral_source: '',
     chapter: '',
+    donor_state: '',
   })
   const [saving, setSaving] = useState(false)
 
@@ -436,11 +453,12 @@ function DonationsTable({
         is_recurring: form.is_recurring,
         referral_source: form.referral_source || null,
         chapter: form.chapter.replace(/\s+/g, ' ').trim() || null,
+        donor_state: form.donor_state || null,
         ym_export_date: new Date().toISOString().slice(0, 10),
         matched_lead_id: null,
         notes: null,
       })
-      setForm({ donor_name: '', donor_email: '', amount: '', is_recurring: false, referral_source: '', chapter: '' })
+      setForm({ donor_name: '', donor_email: '', amount: '', is_recurring: false, referral_source: '', chapter: '', donor_state: '' })
       setShowForm(false)
     } finally {
       setSaving(false)
@@ -466,6 +484,7 @@ function DonationsTable({
                   recurring: d.is_recurring,
                   referral_source: d.referral_source ?? '',
                   chapter: d.chapter ?? '',
+                  state: d.donor_state ?? '',
                   listed_publicly: d.list_publicly,
                   ym_transaction_id: d.ym_transaction_id ?? '',
                   donated_at: d.donated_at ?? '',
@@ -530,7 +549,12 @@ function DonationsTable({
             maxLength={120}
             value={form.chapter}
             onChange={(e) => setForm((f) => ({ ...f, chapter: e.target.value }))}
-            className="col-span-2 rounded-lg border border-pad-purple-700/15 px-3 py-2 text-sm"
+            className="rounded-lg border border-pad-purple-700/15 px-3 py-2 text-sm"
+          />
+          <StateSelect
+            value={form.donor_state}
+            onChange={(v) => setForm((f) => ({ ...f, donor_state: v }))}
+            className="rounded-lg border border-pad-purple-700/15 px-3 py-2 text-sm"
           />
           <label className="col-span-2 flex items-center gap-2 text-sm text-pad-purple-700/70">
             <input
@@ -559,6 +583,7 @@ function DonationsTable({
               <th className="px-4 py-3 font-medium">Type</th>
               <th className="px-4 py-3 font-medium">Source</th>
               <th className="px-4 py-3 font-medium">Chapter</th>
+              <th className="px-4 py-3 font-medium">State</th>
               <th className="px-4 py-3 font-medium">Given</th>
               <th className="px-4 py-3 font-medium">Honor roll</th>
               <th className="px-4 py-3 font-medium" />
@@ -568,7 +593,7 @@ function DonationsTable({
             {donations.map((d) =>
               editingId === d.id ? (
                 <tr key={d.id} className="border-t border-pad-purple-700/5 bg-pad-gold-500/5">
-                  <td colSpan={8} className="px-4 py-3">
+                  <td colSpan={9} className="px-4 py-3">
                     <form onSubmit={(e) => saveEdit(e, d)} className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                       <label className="text-xs text-pad-purple-700/60">
                         Donor name
@@ -607,7 +632,7 @@ function DonationsTable({
                           className="mt-1 w-full rounded-lg border border-pad-purple-700/15 px-3 py-2 text-sm text-pad-purple-950"
                         />
                       </label>
-                      <label className="col-span-2 text-xs text-pad-purple-700/60">
+                      <label className="text-xs text-pad-purple-700/60">
                         Chapter
                         <input
                           list="donation-chapter-options"
@@ -615,6 +640,14 @@ function DonationsTable({
                           placeholder="e.g. Story Chapter, Howard Law"
                           value={edit.chapter}
                           onChange={(e) => setEdit((f) => ({ ...f, chapter: e.target.value }))}
+                          className="mt-1 w-full rounded-lg border border-pad-purple-700/15 px-3 py-2 text-sm text-pad-purple-950"
+                        />
+                      </label>
+                      <label className="text-xs text-pad-purple-700/60">
+                        State
+                        <StateSelect
+                          value={edit.donor_state}
+                          onChange={(v) => setEdit((f) => ({ ...f, donor_state: v }))}
                           className="mt-1 w-full rounded-lg border border-pad-purple-700/15 px-3 py-2 text-sm text-pad-purple-950"
                         />
                       </label>
@@ -655,6 +688,9 @@ function DonationsTable({
                 <td className="px-4 py-2.5">{d.is_recurring ? 'Monthly' : 'One-time'}</td>
                 <td className="px-4 py-2.5">{d.referral_source || '—'}</td>
                 <td className="px-4 py-2.5">{d.chapter || '—'}</td>
+                <td className="px-4 py-2.5">
+                  {d.donor_state || <span className="text-xs font-medium text-amber-700">Missing</span>}
+                </td>
                 <td className="px-4 py-2.5 text-pad-purple-700/60">
                   {new Date(d.donated_at ?? d.created_at).toLocaleDateString()}
                 </td>
@@ -691,7 +727,7 @@ function DonationsTable({
             )}
             {donations.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-pad-purple-700/40">
+                <td colSpan={9} className="px-4 py-8 text-center text-pad-purple-700/40">
                   No donations recorded yet. Import the YM export to get started.
                 </td>
               </tr>

@@ -28,3 +28,11 @@ export function toPostal(raw: string): string | null {
   if (postalCodes.has(v.toUpperCase())) return v.toUpperCase()
   return stateNames[v.toLowerCase()] ?? null
 }
+
+/** [postal, display name] for every state and DC, sorted by name, for pickers. */
+export const usStateOptions: [string, string][] = Object.entries(stateNames)
+  .map(([name, code]): [string, string] => [
+    code,
+    name.replace(/\b\w/g, (c) => c.toUpperCase()).replace(' Of ', ' of '),
+  ])
+  .sort((a, b) => a[1].localeCompare(b[1]))
