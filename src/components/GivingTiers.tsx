@@ -12,8 +12,8 @@ const tierNames: Record<number, string> = {
   100: 'Advocate',
   250: 'Counselor',
   500: 'Barrister',
-  1000: 'Magistrate',
-  2500: 'Chief Justice',
+  1000: 'Justice Guild',
+  2500: 'Order of the Gavel',
   10000: 'Legacy Society',
 }
 const presetAmounts = new Set([25, 50, 100, 250, 500, 1000])
