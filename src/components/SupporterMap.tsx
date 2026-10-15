@@ -267,7 +267,11 @@ function StatePopover({
       </div>
 
       {row && !row.few ? (
-        <dl className="mt-3 grid grid-cols-3 gap-2 text-center">
+        <dl className="mt-3 grid grid-cols-2 gap-2 text-center">
+          <div className="rounded-xl bg-pad-purple-950/5 px-1 py-2">
+            <dt className="text-[9px] font-extrabold uppercase tracking-[0.1em] text-pad-purple-900/60">Gifts</dt>
+            <dd className="mt-0.5 text-lg font-black">{(row.gifts ?? 0).toLocaleString()}</dd>
+          </div>
           <div className="rounded-xl bg-pad-purple-950/5 px-1 py-2">
             <dt className="text-[9px] font-extrabold uppercase tracking-[0.1em] text-pad-purple-900/60">Visitors</dt>
             <dd className="mt-0.5 text-lg font-black">{row.supporters?.toLocaleString()}</dd>
@@ -284,7 +288,7 @@ function StatePopover({
       ) : (
         <p className="mt-3 text-sm leading-snug text-pad-purple-900/80">
           {row
-            ? `${shape.name} is ${giving ? 'giving' : 'visiting'}. Exact counts show once 3 or more supporters visit.`
+            ? `${shape.name} is ${giving ? 'giving' : 'visiting'}. Exact counts show once 3 or more supporters visit or someone there gives.`
             : `No one from ${shape.name} yet. Be the first to light it up.`}
         </p>
       )}

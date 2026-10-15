@@ -12,7 +12,7 @@ export type EventType =
 
 export type LeadIntent = 'donate' | 'join' | 'unspecified'
 
-/** One row per US state from pad.supporter_map(). Counts are null when few is true (under 3). */
+/** One row per US state from pad.supporter_map(). Counts are null when few is true (under 3 visits and no gift). */
 export interface SupporterMapRow {
   region_code: string
   region: string
@@ -24,7 +24,7 @@ export interface SupporterMapRow {
   total_intl: number
   /** At least one Give click from this state, even when counts are hidden. Added in 0005. */
   has_give_click?: boolean
-  /** Imported YM gifts from this state; null under 3. Added in 0009. */
+  /** Gifts from this state; null when none. Added in 0009, shown from 1 since 0010. */
   gifts?: number | null
   /** At least one imported gift from this state. Added in 0009. */
   has_gift?: boolean
