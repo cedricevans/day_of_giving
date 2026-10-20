@@ -545,6 +545,7 @@ function DonationsTable({
             className="rounded-lg border border-pad-purple-700/15 px-3 py-2 text-sm"
           />
           <input
+            list="donation-chapter-options"
             placeholder="Chapter (if known)"
             maxLength={120}
             value={form.chapter}
