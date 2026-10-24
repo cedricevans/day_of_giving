@@ -64,6 +64,8 @@ function demoData(): SupporterMapData {
         total_us: totalUs,
         total_intl: 23,
         has_give_click: n % 3 !== 0,
+        gifts: n % 3 !== 0 ? Math.max(1, Math.round(n * 0.1)) : null,
+        has_gift: n % 3 !== 0,
       },
     ]),
   )

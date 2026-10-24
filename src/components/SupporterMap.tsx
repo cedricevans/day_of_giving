@@ -48,7 +48,7 @@ function useStateShapes() {
   return shapes
 }
 
-/** Live US map: a state lights up gold once someone there taps Give. Clicks, not confirmed gifts. */
+/** Live US map: a state lights up gold once a gift from there is recorded. Give taps alone do not count. */
 export function SupporterMap() {
   const shapes = useStateShapes()
   const [data, setData] = useState<SupporterMapData | null>(null)
@@ -75,10 +75,7 @@ export function SupporterMap() {
   }, [selected])
 
   const rowFor = (code: string) => data?.byState.get(code)
-  const gave = (code: string) => {
-    const r = rowFor(code)
-    return Boolean(r && (r.has_gift || r.has_give_click || (r.give_clicks ?? 0) > 0))
-  }
+  const gave = (code: string) => Boolean(rowFor(code)?.has_gift)
   const givingStates = shapes.filter((s) => gave(s.code)).length
   const visitingStates = shapes.filter((s) => rowFor(s.code)).length
   const selectedShape = shapes.find((s) => s.code === selected)
@@ -118,7 +115,7 @@ export function SupporterMap() {
 
         <div className="mt-8 rounded-[2rem] bg-white/[0.04] p-3 ring-1 ring-white/10 sm:p-8">
           <div ref={mapRef} className="relative">
-            <svg viewBox="0 0 975 610" className="block h-auto w-full" role="img" aria-label={`Map of US states. ${givingStates} states with supporters who tapped Give.`}>
+            <svg viewBox="0 0 975 610" className="block h-auto w-full" role="img" aria-label={`Map of US states. ${givingStates} states with gifts.`}>
               <defs>
                 <filter id="map-glow" x="-20%" y="-20%" width="140%" height="140%">
                   <feGaussianBlur stdDeviation="6" result="blur" />
@@ -184,7 +181,7 @@ export function SupporterMap() {
         </div>
 
         <p className="mt-4 text-center text-xs leading-relaxed text-purple-100/40">
-          Gold means a gift or a Give tap came from that state. Purple means members there have visited this page.
+          Gold means a gift came from that state. Purple means members there have visited this page.
           Visitor locations are approximate, by state, from IP address. Gifts are completed on pad.org.
           {data?.isDemo ? ' Showing sample data.' : ''}
         </p>
