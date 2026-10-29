@@ -330,6 +330,11 @@ export interface Database {
           on_site?: boolean
           published_at?: string | null
           youtube_id?: string | null
+          file_path?: string | null
+          file_mime?: string | null
+          file_bytes?: number | null
+          duration_seconds?: number | null
+          poster_path?: string | null
         }
         Relationships: []
       }

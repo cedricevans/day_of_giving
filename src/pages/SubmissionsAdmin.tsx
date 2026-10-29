@@ -1,9 +1,12 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { downloadCsv } from '../lib/csv'
 import { supabase } from '../lib/supabase'
+import { ACCEPTED_TYPES, capturePoster, compressVideo, loadVideo, videoMime } from '../lib/videoCompress'
 import type { SubmissionRow, SubmissionStatus } from '../lib/database.types'
 
 const BUCKET = 'pad-submissions'
+const MAX_REPLACE_SECONDS = 30
+const MAX_REPLACE_BYTES = 50 * 1024 * 1024
 // Mirror c_quota_bytes in pad.start_submission and the budget in
 // pad.story_video_budget_left; the server enforces both.
 const QUOTA_BYTES = 800 * 1024 * 1024
@@ -47,6 +50,10 @@ export function SubmissionsAdmin() {
   const [busyId, setBusyId] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [loadedAt, setLoadedAt] = useState(0)
+  const [replacing, setReplacing] = useState<{ id: string; file: File; video: HTMLVideoElement; poster: Blob | null } | null>(null)
+  const [replacePct, setReplacePct] = useState<number | null>(null)
+  const replaceInput = useRef<HTMLInputElement>(null)
+  const replaceTarget = useRef<string | null>(null)
 
   const shareUrl = `${window.location.origin}/share`
 
@@ -174,6 +181,88 @@ export function SubmissionsAdmin() {
       if (upd.error) throw upd.error
       if (playing?.id === r.id) setPlaying(null)
       await load()
+    })
+  }
+
+  const chooseReplacement = (r: SubmissionRow) => {
+    replaceTarget.current = r.id
+    replaceInput.current?.click()
+  }
+
+  async function pickReplacement(f: File | undefined) {
+    const id = replaceTarget.current
+    if (replaceInput.current) replaceInput.current.value = ''
+    if (!f || !id) return
+    if (!ACCEPTED_TYPES.includes(videoMime(f))) return alert('Please choose an MP4, MOV or WebM video.')
+    let video: HTMLVideoElement
+    try {
+      video = await loadVideo(f)
+    } catch {
+      return alert("That video couldn't be read. Try a different file.")
+    }
+    if (video.duration > MAX_REPLACE_SECONDS + 0.5) {
+      return alert(`That clip is ${Math.round(video.duration)} seconds. Videos can be up to ${MAX_REPLACE_SECONDS} seconds.`)
+    }
+    setReplacing({ id, file: f, video, poster: await capturePoster(video) })
+  }
+
+  /**
+   * Swaps the video on an existing story. Must start inside the click so
+   * Safari lets the compressor capture audio. The new file gets a fresh path
+   * so no cached copy of the old one is served, and the old file is removed
+   * only after the story points at the new one.
+   */
+  const uploadReplacement = (r: SubmissionRow) => {
+    if (!replacing || replacing.id !== r.id) return
+    const { file, video, poster } = replacing
+    const job = compressVideo(video, (pct) => setReplacePct(Math.round(pct)))
+    setReplacePct(0)
+    run(r.id, async () => {
+      try {
+        const small = job ? await job.promise : null
+        const upload: Blob = small && small.size < file.size ? small : file
+        const mime = upload === file ? videoMime(file) : upload.type
+        if (upload.size > MAX_REPLACE_BYTES) throw new Error('This video is over 50 MB even after shrinking. Please trim it and try again.')
+        const oldBytes = r.status === 'file_removed' ? 0 : (r.file_bytes ?? 0)
+        if (usedBytes - oldBytes + upload.size > QUOTA_BYTES) throw new Error('Video storage is full. Remove videos that are saved elsewhere, then try again.')
+
+        const stamp = Date.now()
+        const ext = mime === 'video/webm' ? 'webm' : mime === 'video/quicktime' ? 'mov' : 'mp4'
+        const filePath = `videos/${r.id}-${stamp}.${ext}`
+        const posterPath = poster ? `posters/${r.id}-${stamp}.jpg` : null
+        const up = await supabase.storage.from(BUCKET).upload(filePath, upload, { contentType: mime })
+        if (up.error) throw up.error
+        const posterUp = posterPath ? await supabase.storage.from(BUCKET).upload(posterPath, poster!, { contentType: 'image/jpeg' }) : null
+        const newPoster = posterUp && !posterUp.error ? posterPath : r.poster_path
+
+        const patch = {
+          file_path: filePath,
+          file_mime: mime,
+          file_bytes: upload.size,
+          duration_seconds: Math.round(video.duration * 10) / 10,
+          poster_path: newPoster,
+          status: r.status === 'file_removed' || r.status === 'pending_upload' ? ('received' as const) : r.status,
+        }
+        const upd = await supabase.from('submissions').update(patch).eq('id', r.id)
+        if (upd.error) {
+          await supabase.storage.from(BUCKET).remove([filePath, ...(newPoster !== r.poster_path && posterPath ? [posterPath] : [])])
+          throw upd.error
+        }
+
+        const stale = [
+          ...(r.file_path && r.status !== 'file_removed' ? [r.file_path] : []),
+          ...(r.poster_path && newPoster !== r.poster_path ? [r.poster_path] : []),
+        ]
+        if (stale.length) {
+          const { error } = await supabase.storage.from(BUCKET).remove(stale)
+          if (error) console.warn('[admin] old video not removed', error)
+        }
+        if (playing?.id === r.id) setPlaying(null)
+        setReplacing(null)
+        await load()
+      } finally {
+        setReplacePct(null)
+      }
     })
   }
 
@@ -335,6 +424,14 @@ export function SubmissionsAdmin() {
         </div>
       </div>
 
+      <input
+        ref={replaceInput}
+        type="file"
+        accept="video/mp4,video/quicktime,video/webm,video/x-m4v,.mov,.m4v"
+        className="hidden"
+        onChange={(e) => pickReplacement(e.target.files?.[0])}
+      />
+
       <div className="space-y-3">
         {visible.map((r) => {
           const hasVideo = Boolean(r.file_path) && (r.status === 'received' || r.status === 'approved')
@@ -377,6 +474,26 @@ export function SubmissionsAdmin() {
 
               {playing?.id === r.id && (
                 <video src={playing.url} controls autoPlay playsInline className="mt-3 max-h-96 w-full rounded-xl bg-black" />
+              )}
+
+              {replacing?.id === r.id && (
+                <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl bg-pad-gold-500/10 p-3 text-sm text-pad-purple-900">
+                  <span className="min-w-0 flex-1">
+                    {replacePct !== null
+                      ? `Shrinking and uploading the new video… ${replacePct}%. Keep this tab open.`
+                      : `New video: ${replacing.file.name} (${Math.round(replacing.video.duration)}s). It replaces the current video on this story.`}
+                  </span>
+                  {replacePct === null && (
+                    <>
+                      <button onClick={() => uploadReplacement(r)} disabled={busy} className="rounded-full bg-pad-gold-500 px-4 py-1.5 font-semibold text-pad-purple-950 disabled:opacity-50">
+                        Upload replacement
+                      </button>
+                      <button onClick={() => setReplacing(null)} disabled={busy} className="rounded-full border border-pad-purple-700/15 px-4 py-1.5 font-medium text-pad-purple-700 disabled:opacity-50">
+                        Cancel
+                      </button>
+                    </>
+                  )}
+                </div>
               )}
 
               {r.status !== 'pending_upload' && (
@@ -422,6 +539,11 @@ export function SubmissionsAdmin() {
                 {r.status === 'approved' && (
                   <button onClick={() => setStatus(r, 'received')} disabled={busy} className="rounded-full border border-pad-purple-700/15 px-4 py-1.5 font-medium text-pad-purple-700 disabled:opacity-50">
                     Unapprove
+                  </button>
+                )}
+                {r.status !== 'pending_upload' && (r.file_path || r.status === 'file_removed') && (
+                  <button onClick={() => chooseReplacement(r)} disabled={busy || replacePct !== null} className="rounded-full border border-pad-purple-700/15 px-4 py-1.5 font-medium text-pad-purple-700 disabled:opacity-50">
+                    Replace video
                   </button>
                 )}
                 {hasVideo && (
