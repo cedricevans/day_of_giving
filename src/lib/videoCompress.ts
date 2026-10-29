@@ -6,13 +6,18 @@
  * speakers.
  *
  * Returns null when the browser can't do this (older Safari, Firefox without
- * captureStream, etc.). The caller then falls back to the original file.
+ * captureStream, etc.), or when frames stopped being drawn partway through,
+ * which happens if the tab is hidden or the phone locks while it runs. Audio
+ * keeps recording either way, so a gap would upload a clip whose picture
+ * freezes. The caller then falls back to the original file.
  */
 
 const MAX_LONG_SIDE = 1280
 const MAX_SHORT_SIDE = 720
 const VIDEO_BPS = 1_500_000
 const AUDIO_BPS = 96_000
+// Largest stretch of the clip allowed to pass without a drawn frame.
+const MAX_FRAME_GAP_S = 0.5
 
 // mp4 first: it opens everywhere PAD staff might edit. WebM is the fallback
 // for browsers that can't record mp4.
@@ -137,10 +142,14 @@ export function compressVideo(video: HTMLVideoElement, onProgress: (pct: number)
   const chunks: Blob[] = []
   let done = false
   let frame = 0
+  let lastDrawn = 0
+  let gapped = false
   const rvfc = 'requestVideoFrameCallback' in video
   const draw = () => {
     if (done) return
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+    if (video.currentTime - lastDrawn > MAX_FRAME_GAP_S) gapped = true
+    lastDrawn = video.currentTime
     onProgress(Math.min(99, (video.currentTime / video.duration) * 100))
     frame = rvfc
       ? (video as HTMLVideoElement & { requestVideoFrameCallback: (cb: () => void) => number }).requestVideoFrameCallback(draw)
@@ -161,9 +170,17 @@ export function compressVideo(video: HTMLVideoElement, onProgress: (pct: number)
   })
 
   recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data)
-  recorder.onstop = () => finish(chunks.length ? new Blob(chunks, { type: mimeType.split(';')[0] }) : null)
+  recorder.onstop = () => {
+    const complete = !gapped && !document.hidden && video.duration - lastDrawn <= MAX_FRAME_GAP_S
+    finish(complete && chunks.length ? new Blob(chunks, { type: mimeType.split(';')[0] }) : null)
+  }
   recorder.onerror = () => finish(null)
   video.onended = () => recorder.state !== 'inactive' && recorder.stop()
+  const onHidden = () => {
+    if (document.hidden) gapped = true
+  }
+  document.addEventListener('visibilitychange', onHidden)
+  void promise.then(() => document.removeEventListener('visibilitychange', onHidden))
 
   const timeout = window.setTimeout(() => {
     if (recorder.state !== 'inactive') recorder.stop()
