@@ -8,7 +8,7 @@
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const RESEND_API_KEY = Deno.env.get('PAD_RESEND_API_KEY')
-const FROM = Deno.env.get('PAD_ALERT_FROM') ?? 'PAD Story Alerts <onboarding@resend.dev>'
+const FROM = Deno.env.get('PAD_ALERT_FROM') ?? 'PAD Story Alerts <contact@padgives.org>'
 const TO = (Deno.env.get('PAD_ALERT_TO') ?? 'contact@padgives.org').split(',').map((s) => s.trim())
 const ADMIN_URL = 'https://padgives.org/admin'
 
