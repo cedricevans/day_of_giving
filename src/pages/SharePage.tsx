@@ -159,7 +159,7 @@ export function SharePage() {
     }
 
     // Emails PAD about the new story; the visitor never waits on or sees it.
-    void supabase.functions.invoke('pad-submission-alert', { body: { id: row.id } }).catch(() => {})
+    void supabase.functions.invoke('pad-alerts', { body: { type: 'submission', id: row.id } }).catch(() => {})
     setPhase({ step: 'done' })
   }
 

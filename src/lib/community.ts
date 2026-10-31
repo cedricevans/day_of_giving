@@ -252,6 +252,7 @@ export function useWall() {
       p_kind: input.kind,
     })
     if (error || !data?.[0]) return { ok: false as const, message: friendlyError(error) }
+    void supabase.functions.invoke('pad-alerts', { body: { type: 'wall', id: data[0].id } }).catch(() => {})
     setPosts((prev) => [{ ...data[0], reactions: {}, mine: [] }, ...prev])
     return { ok: true as const }
   }
