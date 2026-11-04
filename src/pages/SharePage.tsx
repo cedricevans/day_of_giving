@@ -5,7 +5,7 @@ import { isSupabaseConfigured, supabase } from '../lib/supabase'
 import { getVisitorId, useChapter } from '../lib/visitor'
 import { ACCEPTED_TYPES, capturePoster, compressVideo, loadVideo, videoMime } from '../lib/videoCompress'
 
-const MAX_SECONDS = 25
+const MAX_SECONDS = 35
 const MAX_BYTES = 50 * 1024 * 1024
 
 const friendlyErrors: Record<string, string> = {
@@ -14,7 +14,7 @@ const friendlyErrors: Record<string, string> = {
   submit_too_long: 'Your testimonial is a little long. Please keep it under 1,500 characters.',
   submit_no_consent: 'Please tick the permission box so PAD can share your story.',
   submit_empty: 'Add a video, a written testimonial, or both.',
-  submit_file_too_large: 'That video is too large. Please trim it to 20 seconds.',
+  submit_file_too_large: 'That video is too large. Please trim it shorter and try again.',
   submit_bad_type: 'Please upload an MP4, MOV or WebM video.',
   submit_too_long_video: `Videos can be up to ${MAX_SECONDS} seconds. Please trim it and try again.`,
   submit_storage_full: 'We have received a lot of videos and uploads are paused for now. Please send a written testimonial instead, or check back later.',
@@ -71,7 +71,7 @@ export function SharePage() {
     try {
       const v = await loadVideo(f)
       if (v.duration > MAX_SECONDS + 0.5) {
-        setFileError(`That clip is ${Math.round(v.duration)} seconds. Please trim it to 20 seconds or less and try again.`)
+        setFileError(`That clip is ${Math.round(v.duration)} seconds. Please trim it to ${MAX_SECONDS} seconds or less and try again.`)
         if (inputRef.current) inputRef.current.value = ''
         return
       }
@@ -115,7 +115,7 @@ export function SharePage() {
     if (upload && upload.size > MAX_BYTES) {
       setPhase({ step: 'form' })
       return setError(
-        'This video is still over 50 MB after shrinking. Please trim it to 20 seconds, or record at 1080p instead of 4K, and try again.',
+        'This video is still over 50 MB after shrinking. Please trim it shorter, or record at 1080p instead of 4K, and try again.',
       )
     }
 
@@ -205,7 +205,7 @@ export function SharePage() {
             <div className="mt-8 rounded-2xl border border-pad-purple-700/10 bg-white p-5 text-sm text-pad-purple-900">
               <p className="font-semibold">Video tips</p>
               <ul className="mt-2 list-disc space-y-1 pl-5 text-pad-purple-700/80">
-                <li>Keep it to 15 to 20 seconds. Clips longer than {MAX_SECONDS} seconds can't be accepted.</li>
+                <li>Keep it to 20 to 30 seconds. Clips longer than {MAX_SECONDS} seconds can't be accepted.</li>
                 <li>Hold your phone horizontally (sideways), not vertically.</li>
                 <li>Keep it steady in a quiet, well lit spot.</li>
                 <li>Say your name, your chapter, and what P.A.D. means to you.</li>
@@ -240,7 +240,7 @@ export function SharePage() {
 
               <div>
                 <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.2em] text-pad-purple-700/70">
-                  Video (15 to 20 seconds)
+                  Video (up to {MAX_SECONDS} seconds)
                 </span>
                 {previewUrl ? (
                   <div className="rounded-2xl border border-pad-purple-700/10 bg-white p-3">

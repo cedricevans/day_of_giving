@@ -5,7 +5,7 @@ import { ACCEPTED_TYPES, capturePoster, compressVideo, loadVideo, videoMime } fr
 import type { SubmissionRow, SubmissionStatus } from '../lib/database.types'
 
 const BUCKET = 'pad-submissions'
-const MAX_REPLACE_SECONDS = 30
+const MAX_REPLACE_SECONDS = 35
 const MAX_REPLACE_BYTES = 50 * 1024 * 1024
 // Mirror c_quota_bytes in pad.start_submission and the budget in
 // pad.story_video_budget_left; the server enforces both.
@@ -302,7 +302,7 @@ export function SubmissionsAdmin() {
             </button>
           </div>
           <p className="mt-2 text-xs text-pad-purple-700/60">
-            Name, email and permission are required. Chapter is optional. Videos up to 25 seconds; each is shrunk to 720p
+            Name, email and permission are required. Chapter is optional. Videos up to 35 seconds; each is shrunk to 720p
             on the sender's device before upload.
           </p>
         </div>

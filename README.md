@@ -167,7 +167,7 @@ storage, limited egress):
   20 to 40 MB to about 4 MB. It takes about as long as the clip, so the
   page says to keep it open. If the browser can't do this, the original
   uploads if it is under 50 MB.
-- Limits enforced on the server: 25 seconds of video (30 hard stop),
+- Limits enforced on the server: 35 seconds of video (40 hard stop),
   50 MB per file (bucket limit), MP4/MOV/WebM only, 5 submissions per
   visitor per day, and new videos refused once the bucket plus pending
   uploads reaches 800 MB (`c_quota_bytes` in `pad.start_submission`,
