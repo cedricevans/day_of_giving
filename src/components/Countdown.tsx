@@ -31,7 +31,7 @@ export function Countdown({ start, end }: { start: string; end: string }) {
 
   const live = now >= startMs
   const t = remaining(live ? endMs : startMs, now)
-  const label = live ? 'The Week of Giving is live · Ends Monday, Nov 16' : "Begins Sunday, Nov 8 · Founders' Day"
+  const label = live ? 'The Week of Giving is live · Ends Monday, Nov 16' : "Giving is open now · Official kickoff Sunday, Nov 8"
 
   const digits = (
     <div className="flex gap-2 sm:gap-3">
