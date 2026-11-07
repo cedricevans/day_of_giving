@@ -6,6 +6,7 @@ import { Audiences } from '../components/Audiences'
 import { Heritage } from '../components/Heritage'
 import { GivingTiers } from '../components/GivingTiers'
 import { Scoreboard } from '../components/Scoreboard'
+import { KickoffVideo } from '../components/KickoffVideo'
 import { HonorRoll } from '../components/HonorRoll'
 import { SupporterMap } from '../components/SupporterMap'
 import { CommunityWall } from '../components/CommunityWall'
@@ -21,12 +22,13 @@ export function LandingPage() {
     <div className="min-h-screen overflow-x-hidden">
       <SiteHeader />
       <Hero />
+      <KickoffVideo />
       <Scoreboard />
       <HonorRoll />
       <SupporterMap />
       <ValuesMarquee />
-      <CommunityWall />
       <MemberStories />
+      <CommunityWall />
       <GivingTiers />
       <Stats />
       <Audiences />

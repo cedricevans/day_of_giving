@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { youtubeId } from '../lib/campaign'
 import type { PollAdminRow, WallPostAdminRow } from '../lib/database.types'
 
 const btn = 'rounded-full border border-pad-purple-700/15 px-3 py-1 text-xs font-semibold text-pad-purple-700 hover:bg-pad-purple-700/5'
@@ -155,6 +156,65 @@ function BlockedWords() {
   )
 }
 
+function KickoffVideoAdmin() {
+  const [url, setUrl] = useState('')
+  const [on, setOn] = useState(false)
+  const [loaded, setLoaded] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function load() {
+    const { data, error } = await supabase.from('site_settings').select('*').eq('id', 1).maybeSingle()
+    setError(error?.message ?? null)
+    setUrl(data?.kickoff_video_url ?? '')
+    setOn(data?.kickoff_video_on ?? false)
+    setLoaded(true)
+  }
+
+  useEffect(() => {
+    load()
+  }, [])
+
+  async function save(nextOn: boolean) {
+    const trimmed = url.trim()
+    if (trimmed && !youtubeId(trimmed)) {
+      alert('That does not look like a YouTube link. Paste the link from YouTube\'s Share button.')
+      return
+    }
+    if (nextOn && !trimmed) {
+      alert('Paste the YouTube link before turning the video on.')
+      return
+    }
+    const { error } = await supabase
+      .from('site_settings')
+      .update({ kickoff_video_url: trimmed || null, kickoff_video_on: nextOn, updated_at: new Date().toISOString() })
+      .eq('id', 1)
+    if (error) alert(error.message)
+    await load()
+  }
+
+  return (
+    <div className={card}>
+      <h3 className="font-semibold text-pad-purple-900">Kickoff video</h3>
+      <p className="text-xs text-pad-purple-700/50">
+        Shows above "Where we stand" on the home page while it is on. {loaded && (on ? 'It is on now.' : 'It is off now.')}
+      </p>
+      {error && <p className="mt-2 text-sm text-red-700">{error}</p>}
+      <div className="mt-3 grid gap-2">
+        <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="YouTube link" className={input} />
+        <div className="flex gap-2">
+          <button onClick={() => save(on)} className={btn}>Save link</button>
+          <button
+            onClick={() => save(!on)}
+            className="rounded-lg bg-pad-purple-900 px-4 py-2 text-sm font-semibold text-white"
+          >
+            {on ? 'Turn off' : 'Turn on'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function PollsAdmin() {
   const { rows, error, refresh } = useLoad<PollAdminRow>(() => supabase.from('polls').select('*').order('sort_order').order('created_at'))
   const [question, setQuestion] = useState('')
@@ -269,6 +329,7 @@ export function CommunityAdmin() {
     <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
       <WallModeration />
       <div className="space-y-4">
+        <KickoffVideoAdmin />
         <PollsAdmin />
         <BlockedWords />
         <ChaptersAdmin />

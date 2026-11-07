@@ -338,6 +338,12 @@ export interface Database {
         }
         Relationships: []
       }
+      site_settings: {
+        Row: { id: number; kickoff_video_url: string | null; kickoff_video_on: boolean; updated_at: string }
+        Insert: { id?: number; kickoff_video_url?: string | null; kickoff_video_on?: boolean }
+        Update: { kickoff_video_url?: string | null; kickoff_video_on?: boolean; updated_at?: string }
+        Relationships: []
+      }
       polls: {
         Row: PollAdminRow
         Insert: { question: string; options: string[]; is_active?: boolean; sort_order?: number }
@@ -372,6 +378,10 @@ export interface Database {
       toggle_wall_reaction: {
         Args: { p_post_id: string; p_visitor_id: string; p_emoji: WallEmoji }
         Returns: boolean
+      }
+      kickoff_video: {
+        Args: Record<string, never>
+        Returns: string | null
       }
       active_polls: {
         Args: { p_visitor_id: string }

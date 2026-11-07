@@ -41,6 +41,29 @@ export const padFacts = {
     'Service to the student, the school, the profession, and the community.',
 }
 
+/**
+ * Bar geometry. Below the goal the bar runs $0 to goal. Past it the bar keeps
+ * growing: the scale stretches so the fill sits at 85% and the goal becomes a
+ * marker that slides left as giving climbs.
+ */
+export function goalProgress(raisedCents: number) {
+  const goal = campaign.goalCents
+  const reached = raisedCents >= goal
+  const pct = (raisedCents / goal) * 100
+  if (!reached) return { reached, pct, barPct: pct, goalMarkPct: 100 }
+  const scale = raisedCents / 0.85
+  return { reached, pct, barPct: 85, goalMarkPct: (goal / scale) * 100 }
+}
+
+/** Accepts a bare YouTube ID or any youtube.com / youtu.be link; returns the 11-char ID or null. */
+export function youtubeId(input: string | null) {
+  if (!input) return null
+  const trimmed = input.trim()
+  if (/^[A-Za-z0-9_-]{11}$/.test(trimmed)) return trimmed
+  const match = trimmed.match(/(?:youtu\.be\/|[?&]v=|\/(?:embed|live|shorts)\/)([A-Za-z0-9_-]{11})/)
+  return match ? match[1] : null
+}
+
 export const storiesOpen = () => Date.now() >= Date.parse(campaign.storiesLaunch)
 
 /** Appends UTM + our click-id so a visit can be matched back to a lead/session later. */

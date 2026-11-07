@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { animate, motion } from 'framer-motion'
-import { campaign, withTracking } from '../lib/campaign'
+import { campaign, goalProgress, withTracking } from '../lib/campaign'
 import { useScoreboard } from '../lib/community'
 import { logEvent } from '../lib/tracking'
 import { ChapterInput } from './ChapterInput'
@@ -34,7 +34,7 @@ const BOARD_SLOTS = 5
 export function Scoreboard() {
   const { score, leaders } = useScoreboard()
   const raised = score?.raised_cents ?? 0
-  const pct = Math.min(100, (raised / campaign.goalCents) * 100)
+  const { reached, pct, barPct, goalMarkPct } = goalProgress(raised)
   const topRaised = Math.max(1, ...leaders.map((l) => l.raised_cents))
   const rankByDollars = leaders.some((l) => l.raised_cents > 0)
   const topSupporters = Math.max(1, ...leaders.map((l) => l.supporters + l.posts))
@@ -58,7 +58,7 @@ export function Scoreboard() {
           description="Every recorded gift moves the bar. Chapters climb the board as their members give."
         />
 
-        <div className="mt-12 grid gap-6 lg:grid-cols-[1.35fr_1fr] lg:gap-8">
+        <div className="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-[1.35fr_1fr] lg:gap-8">
           {/* Money + progress */}
           <div className="rounded-[2rem] bg-pad-purple-950 p-6 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.7)] ring-1 ring-pad-gold-400/25 sm:p-10">
             <p className="text-sm font-bold uppercase tracking-[0.2em] text-purple-100/70">Raised so far</p>
@@ -66,34 +66,62 @@ export function Scoreboard() {
               <Ticker value={raised} format={(n) => dollars(n)} />
             </p>
             <p className="mt-3 text-lg font-semibold text-pad-gold-300">
-              of our {dollars(campaign.goalCents)} goal
+              {reached
+                ? `We passed our ${dollars(campaign.goalCents)} goal! Every gift keeps us climbing.`
+                : `of our ${dollars(campaign.goalCents)} goal`}
             </p>
 
             <div className="relative mt-8">
               <div className="h-9 overflow-hidden rounded-full bg-white/10 ring-1 ring-white/10">
                 <motion.div
                   initial={{ width: 0 }}
-                  whileInView={{ width: `${Math.max(pct, 3)}%` }}
+                  whileInView={{ width: `${Math.max(barPct, 3)}%` }}
                   viewport={{ once: true }}
                   transition={{ duration: 1.4, ease: 'easeOut' }}
-                  className="relative h-full rounded-full bg-[linear-gradient(90deg,#a37f1f,#e8cd85,#fbe8b0)] shadow-[0_0_30px_rgba(232,205,133,0.7)]"
+                  className={`relative h-full rounded-full shadow-[0_0_30px_rgba(232,205,133,0.7)] ${
+                    reached ? 'bg-[linear-gradient(90deg,#a37f1f,#e8cd85,#fff6d8,#ffffff)] shadow-[0_0_45px_rgba(255,240,200,0.95)]' : 'bg-[linear-gradient(90deg,#a37f1f,#e8cd85,#fbe8b0)]'
+                  }`}
                 >
                   <div className="absolute inset-0 animate-[shimmer_2.5s_linear_infinite] rounded-full bg-[repeating-linear-gradient(135deg,rgba(255,255,255,0.35)_0_12px,transparent_12px_24px)] bg-[length:200%_100%]" />
                 </motion.div>
               </div>
-              {milestones.map((m) => (
+              {reached ? (
                 <span
-                  key={m}
-                  className="absolute top-0 h-9 w-0.5 bg-pad-purple-950/60"
-                  style={{ left: `${m}%` }}
+                  className="absolute -top-1.5 h-12 w-1 -translate-x-1/2 rounded-full bg-pad-purple-950 ring-2 ring-pad-gold-300"
+                  style={{ left: `${goalMarkPct}%` }}
                   aria-hidden="true"
                 />
-              ))}
-              <div className="mt-2 flex justify-between text-xs font-bold text-purple-100/50">
-                <span>$0</span>
-                <span className="text-2xl font-black text-pad-gold-300 sm:text-3xl">{Math.floor(pct)}%</span>
-                <span>{dollars(campaign.goalCents)}</span>
-              </div>
+              ) : (
+                milestones.map((m) => (
+                  <span
+                    key={m}
+                    className="absolute top-0 h-9 w-0.5 bg-pad-purple-950/60"
+                    style={{ left: `${m}%` }}
+                    aria-hidden="true"
+                  />
+                ))
+              )}
+              {reached ? (
+                <>
+                  <div className="relative mt-3 h-7 text-xs font-bold">
+                    <span
+                      className="absolute -translate-x-1/2 whitespace-nowrap rounded-full bg-pad-gold-400 px-2.5 py-1 text-pad-purple-950"
+                      style={{ left: `${Math.min(Math.max(goalMarkPct, 18), 80)}%` }}
+                    >
+                      {dollars(campaign.goalCents)} goal ✓
+                    </span>
+                  </div>
+                  <p className="mt-2 text-right text-2xl font-black text-white sm:text-3xl">
+                    {Math.floor(pct)}% <span className="text-sm font-bold text-pad-gold-300">of goal</span>
+                  </p>
+                </>
+              ) : (
+                <div className="mt-2 flex justify-between text-xs font-bold text-purple-100/50">
+                  <span>$0</span>
+                  <span className="text-2xl font-black text-pad-gold-300 sm:text-3xl">{Math.floor(pct)}%</span>
+                  <span>{dollars(campaign.goalCents)}</span>
+                </div>
+              )}
             </div>
 
             <div className="mt-8 grid grid-cols-3 gap-3">

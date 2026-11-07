@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import crest from '../assets/brand/pad-crest.png'
-import { campaign, padFacts, withTracking } from '../lib/campaign'
+import { campaign, goalProgress, padFacts, withTracking } from '../lib/campaign'
 import { logEvent } from '../lib/tracking'
 import { Photo } from './Photo'
 import { Countdown } from './Countdown'
@@ -17,16 +17,20 @@ function HeroProgress() {
   const { score } = useScoreboard()
   const raised = score?.raised_cents ?? 0
   if (raised <= 0) return null
-  const pct = Math.min(100, (raised / campaign.goalCents) * 100)
+  const { reached, barPct, goalMarkPct } = goalProgress(raised)
   const fmt = (c: number) => (c / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
   return (
     <a href="#scoreboard" className="mt-8 block max-w-md" aria-label="See live progress">
       <div className="flex items-baseline justify-between text-sm">
         <span className="font-bold text-white">{fmt(raised)} raised</span>
-        <span className="font-semibold text-pad-gold-300">of {fmt(campaign.goalCents)}</span>
+        <span className="font-semibold text-pad-gold-300">{reached ? `${fmt(campaign.goalCents)} goal passed ✓` : `of ${fmt(campaign.goalCents)}`}</span>
       </div>
-      <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-white/15">
-        <div className="h-full rounded-full bg-[linear-gradient(90deg,#a37f1f,#e8cd85)]" style={{ width: `${Math.max(pct, 2)}%` }} />
+      <div className="relative mt-2 h-2.5 overflow-hidden rounded-full bg-white/15">
+        <div
+          className={`h-full rounded-full ${reached ? 'bg-[linear-gradient(90deg,#a37f1f,#e8cd85,#ffffff)] shadow-[0_0_14px_rgba(255,240,200,0.9)]' : 'bg-[linear-gradient(90deg,#a37f1f,#e8cd85)]'}`}
+          style={{ width: `${Math.max(barPct, 2)}%` }}
+        />
+        {reached && <span className="absolute inset-y-0 w-0.5 bg-pad-purple-950" style={{ left: `${goalMarkPct}%` }} aria-hidden="true" />}
       </div>
     </a>
   )
