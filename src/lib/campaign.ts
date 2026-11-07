@@ -41,7 +41,7 @@ export const padFacts = {
     'Service to the student, the school, the profession, and the community.',
 }
 
-/** Bar fill. At the goal the bar is full and turns solid gold; pct keeps counting past 100. */
+/** Bar fill. At the goal the bar is full and turns green; pct keeps counting past 100. */
 export function goalProgress(raisedCents: number) {
   const reached = raisedCents >= campaign.goalCents
   const pct = (raisedCents / campaign.goalCents) * 100

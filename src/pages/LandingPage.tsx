@@ -27,8 +27,8 @@ export function LandingPage() {
       <HonorRoll />
       <SupporterMap />
       <ValuesMarquee />
-      <MemberStories />
       <CommunityWall />
+      <MemberStories />
       <GivingTiers />
       <Stats />
       <Audiences />

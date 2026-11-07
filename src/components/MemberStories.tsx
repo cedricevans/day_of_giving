@@ -166,7 +166,7 @@ function MemberStoriesSection() {
   const visible = showAll ? stories : stories.slice(0, FIRST_PAGE)
 
   return (
-    <section id="stories" className="relative scroll-mt-16 bg-pad-cream px-4 pt-24 sm:px-6 lg:px-8 lg:pt-32">
+    <section id="stories" className="relative scroll-mt-16 bg-pad-cream px-4 pb-24 sm:px-6 lg:px-8 lg:pb-32">
       <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[2.5rem] bg-pad-purple-950 px-5 py-14 sm:px-10 lg:py-20">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_85%_0%,rgba(232,205,133,0.18),transparent_55%)]" />
         <div className="relative">

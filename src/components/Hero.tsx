@@ -27,7 +27,7 @@ function HeroProgress() {
       </div>
       <div className="relative mt-2 h-2.5 overflow-hidden rounded-full bg-white/15">
         <div
-          className={`h-full rounded-full ${reached ? 'bg-[#d4a72c] shadow-[0_0_14px_rgba(212,167,44,0.9)]' : 'bg-[linear-gradient(90deg,#a37f1f,#e8cd85)]'}`}
+          className={`h-full rounded-full ${reached ? 'bg-[#22c55e] shadow-[0_0_14px_rgba(34,197,94,0.8)]' : 'bg-[linear-gradient(90deg,#a37f1f,#e8cd85)]'}`}
           style={{ width: `${Math.max(barPct, 2)}%` }}
         />
       </div>

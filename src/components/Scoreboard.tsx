@@ -80,7 +80,7 @@ export function Scoreboard() {
                   transition={{ duration: 1.4, ease: 'easeOut' }}
                   className={`relative h-full rounded-full ${
                     reached
-                      ? 'bg-[#d4a72c] shadow-[0_0_40px_rgba(212,167,44,0.9)]'
+                      ? 'bg-[#22c55e] shadow-[0_0_40px_rgba(34,197,94,0.8)]'
                       : 'bg-[linear-gradient(90deg,#a37f1f,#e8cd85,#fbe8b0)] shadow-[0_0_30px_rgba(232,205,133,0.7)]'
                   }`}
                 >
