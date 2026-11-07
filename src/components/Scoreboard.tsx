@@ -34,7 +34,7 @@ const BOARD_SLOTS = 5
 export function Scoreboard() {
   const { score, leaders } = useScoreboard()
   const raised = score?.raised_cents ?? 0
-  const { reached, pct, barPct, goalMarkPct } = goalProgress(raised)
+  const { reached, pct, barPct } = goalProgress(raised)
   const topRaised = Math.max(1, ...leaders.map((l) => l.raised_cents))
   const rankByDollars = leaders.some((l) => l.raised_cents > 0)
   const topSupporters = Math.max(1, ...leaders.map((l) => l.supporters + l.posts))
@@ -78,20 +78,18 @@ export function Scoreboard() {
                   whileInView={{ width: `${Math.max(barPct, 3)}%` }}
                   viewport={{ once: true }}
                   transition={{ duration: 1.4, ease: 'easeOut' }}
-                  className={`relative h-full rounded-full shadow-[0_0_30px_rgba(232,205,133,0.7)] ${
-                    reached ? 'bg-[linear-gradient(90deg,#a37f1f,#e8cd85,#fff6d8,#ffffff)] shadow-[0_0_45px_rgba(255,240,200,0.95)]' : 'bg-[linear-gradient(90deg,#a37f1f,#e8cd85,#fbe8b0)]'
+                  className={`relative h-full rounded-full ${
+                    reached
+                      ? 'bg-[#d4a72c] shadow-[0_0_40px_rgba(212,167,44,0.9)]'
+                      : 'bg-[linear-gradient(90deg,#a37f1f,#e8cd85,#fbe8b0)] shadow-[0_0_30px_rgba(232,205,133,0.7)]'
                   }`}
                 >
-                  <div className="absolute inset-0 animate-[shimmer_2.5s_linear_infinite] rounded-full bg-[repeating-linear-gradient(135deg,rgba(255,255,255,0.35)_0_12px,transparent_12px_24px)] bg-[length:200%_100%]" />
+                  {!reached && (
+                    <div className="absolute inset-0 animate-[shimmer_2.5s_linear_infinite] rounded-full bg-[repeating-linear-gradient(135deg,rgba(255,255,255,0.35)_0_12px,transparent_12px_24px)] bg-[length:200%_100%]" />
+                  )}
                 </motion.div>
               </div>
-              {reached ? (
-                <span
-                  className="absolute -top-1.5 h-12 w-1 -translate-x-1/2 rounded-full bg-pad-purple-950 ring-2 ring-pad-gold-300"
-                  style={{ left: `${goalMarkPct}%` }}
-                  aria-hidden="true"
-                />
-              ) : (
+              {!reached &&
                 milestones.map((m) => (
                   <span
                     key={m}
@@ -99,29 +97,12 @@ export function Scoreboard() {
                     style={{ left: `${m}%` }}
                     aria-hidden="true"
                   />
-                ))
-              )}
-              {reached ? (
-                <>
-                  <div className="relative mt-3 h-7 text-xs font-bold">
-                    <span
-                      className="absolute -translate-x-1/2 whitespace-nowrap rounded-full bg-pad-gold-400 px-2.5 py-1 text-pad-purple-950"
-                      style={{ left: `${Math.min(Math.max(goalMarkPct, 18), 80)}%` }}
-                    >
-                      {dollars(campaign.goalCents)} goal ✓
-                    </span>
-                  </div>
-                  <p className="mt-2 text-right text-2xl font-black text-white sm:text-3xl">
-                    {Math.floor(pct)}% <span className="text-sm font-bold text-pad-gold-300">of goal</span>
-                  </p>
-                </>
-              ) : (
-                <div className="mt-2 flex justify-between text-xs font-bold text-purple-100/50">
-                  <span>$0</span>
-                  <span className="text-2xl font-black text-pad-gold-300 sm:text-3xl">{Math.floor(pct)}%</span>
-                  <span>{dollars(campaign.goalCents)}</span>
-                </div>
-              )}
+                ))}
+              <div className="mt-2 flex justify-between text-xs font-bold text-purple-100/50">
+                <span>$0</span>
+                <span className="text-2xl font-black text-pad-gold-300 sm:text-3xl">{Math.floor(pct)}%</span>
+                <span>{dollars(campaign.goalCents)}</span>
+              </div>
             </div>
 
             <div className="mt-8 grid grid-cols-3 gap-3">

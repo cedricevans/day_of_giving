@@ -41,18 +41,11 @@ export const padFacts = {
     'Service to the student, the school, the profession, and the community.',
 }
 
-/**
- * Bar geometry. Below the goal the bar runs $0 to goal. Past it the bar keeps
- * growing: the scale stretches so the fill sits at 85% and the goal becomes a
- * marker that slides left as giving climbs.
- */
+/** Bar fill. At the goal the bar is full and turns solid gold; pct keeps counting past 100. */
 export function goalProgress(raisedCents: number) {
-  const goal = campaign.goalCents
-  const reached = raisedCents >= goal
-  const pct = (raisedCents / goal) * 100
-  if (!reached) return { reached, pct, barPct: pct, goalMarkPct: 100 }
-  const scale = raisedCents / 0.85
-  return { reached, pct, barPct: 85, goalMarkPct: (goal / scale) * 100 }
+  const reached = raisedCents >= campaign.goalCents
+  const pct = (raisedCents / campaign.goalCents) * 100
+  return { reached, pct, barPct: Math.min(100, pct) }
 }
 
 /** Accepts a bare YouTube ID or any youtube.com / youtu.be link; returns the 11-char ID or null. */

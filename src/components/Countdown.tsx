@@ -20,18 +20,11 @@ export function Countdown({ start, end }: { start: string; end: string }) {
     return () => clearInterval(id)
   }, [])
 
-  if (Number.isNaN(startMs) || Number.isNaN(endMs)) return null
-  if (now >= endMs) {
-    return (
-      <p className="inline-block rounded-full bg-pad-gold-400/15 px-5 py-2 text-sm font-bold uppercase tracking-[0.25em] text-pad-gold-300">
-        The Week of Giving has ended. Thank you!
-      </p>
-    )
-  }
+  // PAD wants the clock gone once it reaches zero at the official kickoff.
+  if (Number.isNaN(startMs) || Number.isNaN(endMs) || now >= startMs) return null
 
-  const live = now >= startMs
-  const t = remaining(live ? endMs : startMs, now)
-  const label = live ? 'The Week of Giving is live · Ends Monday, Nov 16' : "Giving is open now · Official kickoff Sunday, Nov 8"
+  const t = remaining(startMs, now)
+  const label = 'Giving is open now · Official kickoff Sunday, Nov 8'
 
   const digits = (
     <div className="flex gap-2 sm:gap-3">

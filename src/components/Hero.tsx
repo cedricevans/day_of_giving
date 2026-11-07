@@ -17,7 +17,7 @@ function HeroProgress() {
   const { score } = useScoreboard()
   const raised = score?.raised_cents ?? 0
   if (raised <= 0) return null
-  const { reached, barPct, goalMarkPct } = goalProgress(raised)
+  const { reached, barPct } = goalProgress(raised)
   const fmt = (c: number) => (c / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
   return (
     <a href="#scoreboard" className="mt-8 block max-w-md" aria-label="See live progress">
@@ -27,10 +27,9 @@ function HeroProgress() {
       </div>
       <div className="relative mt-2 h-2.5 overflow-hidden rounded-full bg-white/15">
         <div
-          className={`h-full rounded-full ${reached ? 'bg-[linear-gradient(90deg,#a37f1f,#e8cd85,#ffffff)] shadow-[0_0_14px_rgba(255,240,200,0.9)]' : 'bg-[linear-gradient(90deg,#a37f1f,#e8cd85)]'}`}
+          className={`h-full rounded-full ${reached ? 'bg-[#d4a72c] shadow-[0_0_14px_rgba(212,167,44,0.9)]' : 'bg-[linear-gradient(90deg,#a37f1f,#e8cd85)]'}`}
           style={{ width: `${Math.max(barPct, 2)}%` }}
         />
-        {reached && <span className="absolute inset-y-0 w-0.5 bg-pad-purple-950" style={{ left: `${goalMarkPct}%` }} aria-hidden="true" />}
       </div>
     </a>
   )
