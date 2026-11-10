@@ -85,7 +85,7 @@ export function Scoreboard() {
                   }`}
                 >
                   {!reached && (
-                    <div className="absolute inset-0 animate-[shimmer_2.5s_linear_infinite] rounded-full bg-[repeating-linear-gradient(135deg,rgba(255,255,255,0.35)_0_12px,transparent_12px_24px)] bg-[length:200%_100%]" />
+                    <div className="absolute inset-0 animate-[bar-stripes_1.5s_linear_infinite] rounded-full bg-[linear-gradient(135deg,rgba(255,255,255,0.35)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.35)_50%,rgba(255,255,255,0.35)_75%,transparent_75%,transparent)] bg-[length:34px_34px]" />
                   )}
                 </motion.div>
               </div>

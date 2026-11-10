@@ -37,6 +37,15 @@
       background-position: 200% 0;
     }
   }
+  /* Moves exactly one 34px stripe tile per loop, so speed doesn't depend on bar width. */
+  @keyframes bar-stripes {
+    from {
+      background-position: 0 0;
+    }
+    to {
+      background-position: 34px 0;
+    }
+  }
 }
 
 html {
