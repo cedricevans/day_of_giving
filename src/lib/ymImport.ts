@@ -102,13 +102,19 @@ function said(value: string | undefined) {
   return v !== '' && !NO_VALUE.test(v)
 }
 
+/** Re-saved exports (e.g. from Excel) can turn "Transaction_ID" into "Transaction ID" or change case. */
+const headerKey = (h: string) => h.trim().toLowerCase().replace(/[\s_]+/g, '_')
+
 export function parseYmExport(text: string): YmParseResult {
   const [header = [], ...body] = parseCsv(text)
-  const col = new Map(header.map((h, i) => [h.trim(), i]))
+  const col = new Map<string, number>()
+  header.forEach((h, i) => {
+    if (!col.has(headerKey(h))) col.set(headerKey(h), i)
+  })
   const required = ['Transaction_ID', 'Amount', 'First_Name', 'Last_Name']
-  const missingColumns = required.filter((h) => !col.has(h))
+  const missingColumns = required.filter((h) => !col.has(headerKey(h)))
   const get = (r: string[], name: string) => {
-    const i = col.get(name)
+    const i = col.get(headerKey(name))
     return i === undefined ? '' : (r[i] ?? '').trim()
   }
 
