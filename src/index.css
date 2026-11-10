@@ -79,7 +79,18 @@ section[id] {
     inset: 0;
     background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.55) 50%, transparent 70%);
     background-size: 250% 100%;
-    animation: shimmer 3s linear infinite;
+    animation: btn-sheen 6s ease-in-out infinite;
+  }
+}
+
+/* 150% and -50% put the highlight fully off each edge, so the loop restarts unseen. */
+@keyframes btn-sheen {
+  0% {
+    background-position: 150% 0;
+  }
+  65%,
+  100% {
+    background-position: -50% 0;
   }
 }
 
